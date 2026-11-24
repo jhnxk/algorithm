@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>알고리즘 움직임 도감</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@112,800&family=Noto+Sans+KR:wght@400;700;900&display=swap">
+<style>
+/* VOICE: 시험 직전 손에 쥐는 시간표처럼 단정하고 빠르게
+   IDEA: 스위스 철도 시간표 — 단계(정류장)를 한 칸씩 넘기는 플레이어
+   PICTURE: 알고리즘이 실제로 움직이는 무대(배열·격자·그래프)가 화면의 주인공
+   COLOUR and TYPE: 흰 바탕·검정·신호 빨강, 보조 파랑 / Archivo + Noto Sans KR
+   LAYOUT: 굵은 상단 괘선, 왼쪽 큰 번호, 패턴 칩 줄, 무대 → 설명 → 코드 */
+:root{color-scheme:light dark;--bg:light-dark(#fff,#0e0e0e);--ink:light-dark(#111,#f2f2f2);--mute:light-dark(#5f5f5f,#a3a3a3);--line:light-dark(#d2d2d2,#3a3a3a);--card:light-dark(#fff,#171717);--red:light-dark(#e4002b,#ff3b5c);--redt:light-dark(#fde2e7,#3d121b);--blue:light-dark(#1f5fd6,#7aa5ff);--bluet:light-dark(#dde8fb,#172747);--grey:light-dark(#ececec,#272727);--wt:light-dark(#ecd8b8,#4a3a20);--soft:light-dark(#f5f5f5,#151515)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.55 "Noto Sans KR",system-ui,sans-serif;overflow-x:clip}
+.band{padding:clamp(20px,4vw,48px) max(5vw,16px)}
+.wrap{max-width:1240px;margin:0 auto}
+header{border-top:10px solid var(--ink);padding-bottom:8px}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+h1{font:800 clamp(32px,6vw,52px)/1.05 Archivo,"Noto Sans KR",sans-serif;font-stretch:112%;margin:0;letter-spacing:-.01em;text-wrap:balance}
+h1 b{color:var(--red)}
+.sub{color:var(--mute);margin:8px 0 0}
+.prog{min-width:200px;flex:0 1 280px}
+.prog .lab{display:flex;justify-content:space-between;font-weight:700;font-size:14px}
+.bar{height:8px;background:var(--grey);margin-top:6px}.bar i{display:block;height:100%;background:var(--red);width:0;transition:width .3s}
+nav{position:sticky;top:0;z-index:5;background:var(--bg);border-bottom:2px solid var(--ink)}
+.chips{display:flex;gap:6px;overflow-x:auto;padding:10px max(5vw,16px);scrollbar-width:thin}
+.grp{flex:none;align-self:center;font-size:13px;font-weight:900;color:var(--red);padding:0 4px 0 10px}
+.grp:first-child{padding-left:0}
+.chip{flex:none;border:1.5px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:0 14px;min-height:40px;font:700 14px "Noto Sans KR",sans-serif;cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.dn::after{content:" ✓";color:var(--red)}
+.chip:focus-visible,button:focus-visible,input:focus-visible,summary:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+main .wrap{display:grid;grid-template-columns:minmax(0,1.25fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:start}
+.head{display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-items:end;grid-column:1/-1}
+.num{font:800 clamp(48px,9vw,88px)/.85 Archivo,sans-serif;font-stretch:112%;color:var(--red);grid-row:span 2}
+h2{font:900 clamp(26px,4vw,38px)/1.1 "Noto Sans KR",sans-serif;margin:0}
+h2 small{font:500 15px Archivo,sans-serif;color:var(--mute);margin-left:8px}
+.one{margin:0;font-weight:700;font-size:17px}
+.vars{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.vars button{min-height:40px;padding:0 14px;border:1.5px solid var(--ink);background:var(--card);color:var(--ink);font:700 14px "Noto Sans KR",sans-serif;cursor:pointer}
+.vars button.on{background:var(--red);border-color:var(--red);color:#fff}
+.stage{container-type:inline-size;border:2px solid var(--ink);background:var(--soft);padding:16px;min-height:260px;display:flex;flex-direction:column;gap:12px;justify-content:center}
+.row .rl{font-size:13px;font-weight:700;color:var(--mute);margin-bottom:4px}
+.cells{display:flex;gap:4px;flex-wrap:wrap}
+.cw{display:flex;flex-direction:column;align-items:center}
+.cell{width:min(46px,calc((100cqw - 4px * (var(--n) - 1)) / var(--n)));aspect-ratio:1;display:grid;place-items:center;border:1.5px solid var(--line);background:var(--card);border-radius:5px;font:800 clamp(12px,3.6cqw,17px) Archivo,"Noto Sans KR",sans-serif;transition:background .2s,color .2s}
+.cell.wd{width:auto;aspect-ratio:auto;min-width:min(46px,calc((100cqw - 4px * (var(--n) - 1)) / var(--n)));height:min(46px,calc((100cqw - 4px * (var(--n) - 1)) / var(--n)));padding:0 8px;white-space:nowrap}
+.tg{height:15px;font:800 11px Archivo,sans-serif;color:var(--red);white-space:nowrap}
+.empty{font-size:13px;color:var(--mute);padding:8px 0}
+.hl{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
+.ok{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.in{background:var(--bluet);border-color:var(--blue)}
+.alt{background:var(--grey);border-style:dashed}
+.pv{border:3px solid var(--red)}
+.dim{opacity:.28}
+.bad{background:var(--redt);color:var(--red);border-color:var(--red)}
+.wall{background:var(--mute);border-color:var(--mute)}
+.wt{background:var(--wt)}
+.wt.in{background:linear-gradient(135deg,var(--wt) 50%,var(--bluet) 50%)}
+.path{background:var(--red);color:#fff;border-color:var(--red)}
+.grid{display:grid;grid-template-columns:repeat(var(--n),auto);gap:3px;justify-content:center}
+.grid .cell{width:min(44px,calc((100cqw - 3px * (var(--n) - 1)) / var(--n)));border-radius:3px}
+svg.g{width:100%;max-height:280px;display:block}
+.g line,.g path.e{stroke:var(--line);stroke-width:2.5;fill:none}
+.g .e-ok line{stroke:var(--ink);stroke-width:4}.g .e-ok polygon{fill:var(--ink)}
+.g .e-hl line{stroke:var(--red);stroke-width:4.5}.g .e-hl polygon{fill:var(--red)}
+.g .e-dim{opacity:.18}.g .e-bad line{stroke:var(--red);stroke-dasharray:5 5;opacity:.7}
+.g polygon{fill:var(--line)}
+.g .wb{fill:var(--soft)}.g .wl{font:800 13px Archivo,sans-serif;fill:var(--ink)}
+.g circle{fill:var(--card);stroke:var(--ink);stroke-width:2}
+.g .nt{font:800 15px Archivo,sans-serif;fill:var(--ink)}
+.g .n-hl circle{fill:var(--red);stroke:var(--red)}.g .n-hl .nt{fill:#fff}
+.g .n-ok circle{fill:var(--ink)}.g .n-ok .nt{fill:var(--bg)}
+.g .n-in circle{fill:var(--bluet);stroke:var(--blue)}
+.g .n-dim{opacity:.3}
+.g .sl{font:800 12px Archivo,"Noto Sans KR",sans-serif;fill:var(--red)}
+.bars{display:flex;flex-direction:column;gap:8px}
+.track{position:relative;height:24px;margin:3px 0}
+.iv{position:absolute;top:0;height:100%;border-radius:4px;border:1.5px solid var(--ink);background:var(--card);font:800 12px Archivo,sans-serif;display:grid;place-items:center;white-space:nowrap;overflow:hidden}
+.axis{position:relative;height:16px;border-top:1.5px solid var(--ink);font:700 11px Archivo,sans-serif;color:var(--mute)}
+.axis span{position:absolute;transform:translateX(-50%);top:2px}
+.msg{border-left:6px solid var(--red);padding:10px 14px;margin:12px 0;background:var(--card);font-weight:700;min-height:3.2em}
+.ctl{display:grid;grid-template-columns:auto auto auto minmax(0,1fr) auto;gap:8px;align-items:center}
+.ctl button,.act button{min-height:44px;min-width:44px;padding:0 14px;border:2px solid var(--ink);background:var(--card);color:var(--ink);font:800 15px "Noto Sans KR",sans-serif;cursor:pointer}
+.ctl #play{background:var(--ink);color:var(--bg)}
+.ctl input{width:100%;accent-color:var(--red);height:44px}
+.cnt{font:800 14px Archivo,sans-serif;white-space:nowrap}
+.info dl{margin:0;display:grid;grid-template-columns:5.5em minmax(0,1fr);border-top:2px solid var(--ink)}
+.info dt,.info dd{margin:0;padding:10px 0;border-bottom:1px solid var(--line)}
+.info dt{font-weight:900;color:var(--red);font-size:14px;padding-top:12px}
+details{margin-top:16px;border:1.5px solid var(--line)}
+summary{cursor:pointer;padding:12px 14px;font-weight:900;min-height:44px;display:flex;justify-content:space-between;align-items:center}
+.cbar{display:flex;justify-content:flex-end;padding:0 10px}
+.cbar button{min-height:36px;border:1.5px solid var(--line);background:var(--card);color:var(--ink);font:700 13px "Noto Sans KR",sans-serif;padding:0 12px;cursor:pointer}
+pre{overflow-x:auto;margin:0;padding:12px 14px 16px;font:14px/1.55 ui-monospace,Menlo,Consolas,monospace;background:var(--soft)}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:16px}
+.act #got{background:var(--red);border-color:var(--red);color:#fff;flex:1 1 200px}
+.act #got.dn{background:var(--card);color:var(--red)}
+.act #nx{flex:1 1 120px}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:13px;color:var(--mute);margin-top:10px}
+.legend span::before{content:"";display:inline-block;width:12px;height:12px;margin-right:5px;vertical-align:-1px;border:1.5px solid var(--line)}
+.legend .l1::before{background:var(--red);border-color:var(--red)}.legend .l2::before{background:var(--ink);border-color:var(--ink)}.legend .l3::before{background:var(--bluet);border-color:var(--blue)}.legend .l4::before{background:var(--grey);border-style:dashed}
+footer{color:var(--mute);font-size:13px;border-top:2px solid var(--ink)}
+@media(max-width:860px){main .wrap{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.ctl{grid-template-columns:auto auto auto minmax(0,1fr)}.ctl .cnt{grid-column:1/-1;order:-1}.stage{padding:12px 10px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<header class="band"><div class="wrap top">
+  <div><h1>알고리즘 <b>25</b> 패턴,<br>움직임으로 이해하기</h1>
+  <p class="sub">정렬 · 배열 · 자료구조 · 전략 · 그래프 — 한 단계씩 넘겨보고, 이해했으면 체크하고 다음으로.</p></div>
+  <div class="prog"><div class="lab"><span>이해함</span><span id="pc">0 / 25</span></div><div class="bar"><i id="pb"></i></div></div>
+</div></header>
+<nav><div class="chips" id="chips"></div></nav>
+<main class="band"><div class="wrap">
+  <div class="head"><div class="num" id="num">01</div><h2 id="ttl"></h2><p class="one" id="one"></p></div>
+  <section>
+    <div class="vars" id="vars"></div>
+    <div class="stage" id="stage" aria-live="polite"></div>
+    <div class="legend"><span class="l1">지금 보는 것</span><span class="l2">확정·완료</span><span class="l3">범위·방문</span><span class="l4">대기 중</span></div>
+    <div class="msg" id="msg"></div>
+    <div class="ctl">
+      <button id="prev" aria-label="이전 단계">◀</button>
+      <button id="play">재생</button>
+      <button id="next" aria-label="다음 단계">▶</button>
+      <input type="range" id="rng" min="0" value="0" aria-label="단계 이동">
+      <span class="cnt" id="cnt"></span>
+    </div>
+  </section>
+  <section class="info">
+    <dl><dt>언제 쓰나</dt><dd id="when"></dd><dt>복잡도</dt><dd id="cx"></dd><dt>시험 포인트</dt><dd id="tip"></dd></dl>
+    <details open><summary>파이썬 코드</summary><div class="cbar"><button id="copy">복사</button></div><pre><code id="code"></code></pre></details>
+    <div class="act"><button id="got">이해했어요 → 다음</button><button id="nx">건너뛰기</button></div>
+  </section>
+</div></main>
+<footer class="band"><div class="wrap">키보드 ← → 로 단계 이동 · 체크 기록은 이 브라우저에만 저장돼요.</div></footer>
+<script>
+{
+/* ---------- helpers ---------- */
+const R=(l,vals,cf,tf)=>({l,cells:vals.map((v,k)=>({v,c:cf?cf(k,v):'',t:tf?tf(k,v):''}))});
+const L=s=>String.fromCharCode(65+s);
+
+/* ---------- graph presets ---------- */
+const G7={A:[165,28],B:[90,92],C:[240,92],D:[40,165],E:[135,165],F:[205,165],G:[290,165]};
+const G7E=[['A','B'],['A','C'],['B','D'],['B','E'],['C','F'],['E','F'],['C','G']];
+const adj7={};for(const k in G7)adj7[k]=[];for(const[a,b]of G7E){adj7[a].push(b);adj7[b].push(a)}for(const k in adj7)adj7[k].sort();
+const gnodes=(pos,cls,sub)=>Object.keys(pos).map(id=>({id,x:pos[id][0],y:pos[id][1],c:cls(id)||'',s:sub?sub(id):''}));
+
+/* ---------- topics ---------- */
+const T=[
+/* ===== 정렬 ===== */
+{id:'quick',g:'정렬',n:'퀵 정렬',en:'Quick Sort',one:'피벗 하나를 골라 작은 값은 왼쪽, 큰 값은 오른쪽으로 나눈 뒤 양쪽을 다시 정렬.',
+when:'직접 정렬 구현, k번째 수 찾기(퀵 셀렉트), "분할 정복" 키워드.',cx:'평균 O(n log n) · 최악 O(n²) (이미 정렬된 배열 + 끝 피벗) · 추가 메모리 O(log n)',
+tip:'한 번 분할이 끝나면 피벗은 최종 위치에 고정된다. 불안정 정렬.',
+code:`def quick_sort(a, lo, hi):
+    if lo >= hi: return
+    p, i = a[hi], lo - 1          # 맨 끝을 피벗으로
+    for j in range(lo, hi):
+        if a[j] < p:              # 피벗보다 작으면 왼쪽 그룹으로
+            i += 1
+            a[i], a[j] = a[j], a[i]
+    a[i+1], a[hi] = a[hi], a[i+1] # 피벗 제자리 확정
+    quick_sort(a, lo, i)
+    quick_sort(a, i + 2, hi)`,
+gen(){const a=[4,7,2,9,1,6,3,5],F=[],done=new Set();
+ const S=(m,lo,hi,i,j,p)=>F.push({msg:m,rows:[R('배열',a,k=>done.has(k)?'ok':(k<lo||k>hi)?'dim':k===p?'pv':k===j?'hl':(k>=lo&&k<=i)?'in':'',k=>[k===i&&i>=lo?'i':'',k===j?'j':''].filter(Boolean).join(' '))]});
+ S('정렬 전. 구간의 맨 끝 값을 피벗으로 잡고, 피벗보다 작은 값을 왼쪽(파란 그룹)으로 모읍니다.',0,7,-9,-9,-9);
+ const rec=(lo,hi)=>{if(lo>hi)return;if(lo===hi){done.add(lo);S(`${lo}번 칸 하나만 남음 → 이미 정렬된 상태`,lo,hi,-9,-9,-9);return}
+  const p=a[hi];let i=lo-1;S(`구간 ${lo}~${hi}, 피벗 = ${p} (빨간 테두리)`,lo,hi,i,-9,hi);
+  for(let j=lo;j<hi;j++){if(a[j]<p){i++;[a[i],a[j]]=[a[j],a[i]];S(`${a[i]} < ${p} → 왼쪽 그룹 끝(i)으로 교환`,lo,hi,i,j,hi)}else S(`${a[j]} ≥ ${p} → 그대로 둠`,lo,hi,i,j,hi)}
+  [a[i+1],a[hi]]=[a[hi],a[i+1]];done.add(i+1);S(`피벗 ${p}을 왼쪽 그룹 바로 뒤(${i+1}번)로 → 위치 확정!`,lo,hi,-9,-9,-9);
+  rec(lo,i);rec(i+2,hi)};
+ rec(0,7);S('정렬 완료! 피벗이 하나씩 제자리에 박히면서 끝났어요.',0,7,-9,-9,-9);return F}},
+
+{id:'merge',g:'정렬',n:'병합 정렬',en:'Merge Sort',one:'반씩 쪼개 길이 1까지 내려간 뒤, 정렬된 두 묶음을 앞에서부터 비교하며 합친다.',
+when:'항상 O(n log n)이 보장돼야 할 때, 안정 정렬이 필요할 때, 역순쌍(inversion) 세기.',cx:'항상 O(n log n) · 추가 메모리 O(n)',
+tip:'핵심은 "정렬된 두 배열 합치기" — 두 포인터로 작은 쪽을 먼저 꺼낸다. 안정 정렬.',
+code:`def merge_sort(a):
+    if len(a) <= 1: return a
+    m = len(a) // 2
+    L, R = merge_sort(a[:m]), merge_sort(a[m:])
+    out, i, j = [], 0, 0
+    while i < len(L) and j < len(R):
+        if L[i] <= R[j]: out.append(L[i]); i += 1   # <= 라서 안정
+        else:            out.append(R[j]); j += 1
+    return out + L[i:] + R[j:]`,
+gen(){const a=[6,3,8,1,5,2,7,4],F=[];const S=(m,cf,ex)=>F.push({msg:m,rows:[R('배열',a,cf)].concat(ex||[])});
+ S('정렬 전. 길이 1이 될 때까지 반씩 나눈 다음, 합치면서 정렬합니다.',()=>'');
+ const rec=(lo,hi)=>{if(lo>=hi)return;const m=(lo+hi)>>1;rec(lo,m);rec(m+1,hi);
+  const A=a.slice(lo,m+1),B=a.slice(m+1,hi+1),out=[];let i=0,j=0;const inA=k=>k>=lo&&k<=m,inB=k=>k>m&&k<=hi;
+  const base=k=>inA(k)?'in':inB(k)?'alt':'dim';
+  S(`왼쪽 [${A}] · 오른쪽 [${B}] — 각각 정렬된 상태. 이제 합칩니다.`,base,[R('병합 결과',[],()=>'')]);
+  while(i<A.length&&j<B.length){const t=A[i]<=B[j];const pick=t?A[i]:B[j];out.push(pick);
+   S(`${A[i]} vs ${B[j]} → 작은 ${pick}을 먼저 꺼냄`,k=>(k===lo+i||k===m+1+j)?'hl':base(k),[R('병합 결과',out,()=>'ok')]);t?i++:j++}
+  if(i<A.length||j<B.length){while(i<A.length)out.push(A[i++]);while(j<B.length)out.push(B[j++]);S('한쪽이 바닥남 → 남은 값은 이미 정렬돼 있으니 그대로 붙임',base,[R('병합 결과',out,()=>'ok')])}
+  for(let k=0;k<out.length;k++)a[lo+k]=out[k];
+  S(`구간 ${lo}~${hi} 병합 완료`,k=>k>=lo&&k<=hi?'ok':'dim')};
+ rec(0,7);S('정렬 완료!',()=>'ok');return F}},
+
+{id:'insert',g:'정렬',n:'삽입 정렬',en:'Insertion Sort',one:'앞쪽 정렬된 부분에 새 값을 하나씩 꺼내 알맞은 자리에 끼워 넣는다.',
+when:'데이터가 거의 정렬돼 있을 때, n이 작을 때. 카드 정리하는 방식 그대로.',cx:'평균·최악 O(n²) · 거의 정렬된 입력은 O(n)에 가까움',
+tip:'"앞쪽은 항상 정렬됨"이 불변식. 큰 값을 한 칸씩 뒤로 밀고 빈자리에 넣는다. 안정 정렬.',
+code:`def insertion_sort(a):
+    for i in range(1, len(a)):
+        key, j = a[i], i - 1
+        while j >= 0 and a[j] > key:   # key보다 크면 한 칸 뒤로
+            a[j+1] = a[j]
+            j -= 1
+        a[j+1] = key                   # 빈자리에 끼워 넣기`,
+gen(){const a=[5,2,4,6,1,3],F=[];
+ F.push({msg:'첫 칸 [5]는 혼자니까 이미 "정렬된 앞부분"입니다.',rows:[R('배열',a,k=>k===0?'ok':'')]});
+ for(let i=1;i<a.length;i++){const key=a[i];F.push({msg:`key = ${key} 꺼냄. 앞쪽 0~${i-1}번은 정렬된 상태.`,rows:[R('배열',a,k=>k===i?'hl':k<i?'ok':''),R('손에 든 key',[key],()=>'hl')]});
+  let j=i-1;while(j>=0&&a[j]>key){a[j+1]=a[j];const jj=j;F.push({msg:`${a[jj]} > ${key} → ${a[jj]}을 한 칸 뒤로 밀기`,rows:[R('배열',a,k=>k===jj?'alt':k===jj+1?'in':k<=i?'ok':''),R('손에 든 key',[key],()=>'hl')]});j--}
+  a[j+1]=key;const p=j+1;F.push({msg:j>=0?`${a[j]} ≤ ${key} → 멈추고 ${p}번 자리에 ${key} 넣기`:`맨 앞까지 왔음 → 0번 자리에 ${key} 넣기`,rows:[R('배열',a,k=>k===p?'hl':k<=i?'ok':'')]})}
+ F.push({msg:'정렬 완료!',rows:[R('배열',a,()=>'ok')]});return F}},
+
+{id:'stable',g:'정렬',n:'정렬 안정성',en:'Stable Sort',one:'키가 같은 원소들의 "원래 순서"가 정렬 후에도 유지되면 안정 정렬.',
+when:'여러 기준 정렬(점수순 → 같으면 이름순), 이미 한 번 정렬된 데이터를 다른 기준으로 다시 정렬할 때.',cx:'안정: 삽입·병합·계수·파이썬 sort() / 불안정: 퀵·선택·힙',
+tip:'파이썬 sort()는 안정 정렬(Timsort). 다중 기준은 key=lambda x:(1차, 2차) 튜플이 제일 깔끔.',vars:['안정 (삽입 정렬)','불안정 (선택 정렬)'],
+code:`cards = [('B',1), ('A',2), ('B',3), ('A',4)]
+cards.sort(key=lambda x: x[0])     # 글자 기준만 정렬
+# [('A',2), ('A',4), ('B',1), ('B',3)]  ← 같은 글자끼리 원래 순서 유지
+
+# 다중 기준 정렬: 점수 내림차순, 같으면 이름 오름차순
+students.sort(key=lambda s: (-s.score, s.name))`,
+gen(v){const a=['B1','A2','B3','A4'],F=[];const col=x=>x[0]==='A'?'in':'alt';
+ F.push({msg:'글자(A/B)만 보고 정렬합니다. 숫자는 "원래 순서"를 표시하는 꼬리표예요.',rows:[R('입력',a,(k,x)=>col(x))]});
+ if(v===0){for(let i=1;i<a.length;i++){const key=a[i];let j=i-1;while(j>=0&&a[j][0]>key[0]){a[j+1]=a[j];j--}a[j+1]=key;const p=j+1;
+   F.push({msg:`${key} 삽입. 같은 글자 앞에서는 멈추므로(>만 비교) 순서가 뒤집히지 않음.`,rows:[R('배열',a,(k,x)=>k===p?'hl':col(x))]})}
+  F.push({msg:'결과 A2 A4 B1 B3 — 같은 글자끼리 2→4, 1→3 원래 순서 그대로! 안정 정렬.',rows:[R('결과',a,()=>'ok')]})}
+ else{for(let i=0;i<a.length-1;i++){let m=i;for(let j=i+1;j<a.length;j++)if(a[j][0]<a[m][0])m=j;
+   F.push({msg:`${i}번 자리에 올 최솟값 = ${a[m]}. ${a[i]}와 멀리 떨어진 채로 교환!`,rows:[R('배열',a,(k,x)=>k===i||k===m?'hl':k<i?'ok':col(x))]});
+   [a[i],a[m]]=[a[m],a[i]];F.push({msg:'교환 후',rows:[R('배열',a,(k,x)=>k<=i?'ok':col(x))]})}
+  F.push({msg:'결과 A2 A4 B3 B1 — B1이 B3 뒤로 밀렸어요. 멀리 교환하다 순서가 깨짐 → 불안정 정렬.',rows:[R('결과',a,(k,x)=>x[0]==='B'?'bad':'ok')]})}
+ return F}},
+
+{id:'count',g:'정렬',n:'계수 정렬',en:'Counting Sort',one:'값마다 몇 번 나왔는지 세고, 작은 값부터 개수만큼 출력한다. 비교를 아예 안 함.',
+when:'값의 범위(k)가 작은 정수일 때 — 점수 0~100, 나이, 알파벳 26개.',cx:'O(n + k) · 메모리 O(k) (k = 값의 범위)',
+tip:'값 범위가 크면(예: 10⁹) 못 쓴다. "범위가 좁다" = 계수 정렬 신호.',
+code:`def counting_sort(a, k):          # 값 범위 0..k
+    cnt = [0] * (k + 1)
+    for x in a:
+        cnt[x] += 1                    # 값별 개수 세기
+    out = []
+    for v in range(k + 1):
+        out += [v] * cnt[v]            # 개수만큼 차례로 출력
+    return out`,
+gen(){const a=[2,0,2,1,3,1],c=[0,0,0,0],F=[],out=[];const ct=k=>'값'+k;
+ F.push({msg:'값 범위가 0~3뿐 → 크기 4짜리 개수 배열을 만듭니다.',rows:[R('입력',a),R('개수 cnt',c,null,ct)]});
+ a.forEach((x,i)=>{c[x]++;F.push({msg:`${x} 등장 → cnt[${x}] = ${c[x]}`,rows:[R('입력',a,k=>k===i?'hl':k<i?'ok':''),R('개수 cnt',c,k=>k===x?'hl':'',ct)]})});
+ for(let v=0;v<4;v++){for(let t=0;t<c[v];t++)out.push(v);F.push({msg:`값 ${v}을 ${c[v]}번 출력`,rows:[R('개수 cnt',c,k=>k===v?'hl':k<v?'ok':'',ct),R('출력',out,(k,x)=>x===v?'hl':'ok')]})}
+ F.push({msg:'정렬 완료 — 한 번도 두 값을 비교하지 않았어요.',rows:[R('출력',out,()=>'ok')]});return F}},
+
+/* ===== 배열·탐색 ===== */
+{id:'two',g:'배열·탐색',n:'투 포인터',en:'Two Pointers',one:'정렬된 배열 양 끝에 포인터를 두고, 합이 작으면 L을, 크면 R을 안쪽으로 옮긴다.',
+when:'정렬된 배열에서 합이 X인 쌍, 두 배열 병합, 중복 제거, 팰린드롬 검사.',cx:'O(n) (정렬 포함 시 O(n log n)) — 이중 for문 O(n²)을 대체',
+tip:'합이 작다 → 키워야 하니 L++, 크다 → 줄여야 하니 R--. 정렬이 전제!',
+code:`def pairs(a, target):            # a는 정렬된 상태
+    l, r, res = 0, len(a) - 1, []
+    while l < r:
+        s = a[l] + a[r]
+        if s == target:
+            res.append((a[l], a[r])); l += 1; r -= 1
+        elif s < target: l += 1     # 더 키워야 함
+        else:            r -= 1     # 더 줄여야 함
+    return res`,
+gen(){const a=[1,2,4,6,8,9,11],t=12,F=[],found=[];let l=0,r=a.length-1;
+ const S=m=>F.push({msg:m,rows:[R('정렬된 배열 · 목표 합 12',a,k=>k===l||k===r?'hl':(k<l||k>r)?'dim':'',k=>k===l&&k===r?'L R':k===l?'L':k===r?'R':''),R('찾은 쌍',found,()=>'ok')]});
+ S('L은 맨 왼쪽, R은 맨 오른쪽에서 출발.');
+ while(l<r){const s=a[l]+a[r];if(s===t){found.push(`${a[l]}+${a[r]}`);S(`${a[l]} + ${a[r]} = 12 ✓ 찾음! 양쪽 다 안으로`);l++;r--}
+  else if(s<t){S(`${a[l]} + ${a[r]} = ${s} < 12 → 더 커져야 하니 L 오른쪽으로`);l++}else{S(`${a[l]} + ${a[r]} = ${s} > 12 → 더 작아져야 하니 R 왼쪽으로`);r--}}
+ F.push({msg:'L ≥ R → 종료. 비교 4번으로 끝 (이중 for문이면 21번).',rows:[R('정렬된 배열',a,()=>'dim'),R('찾은 쌍',found,()=>'ok')]});return F}},
+
+{id:'slide',g:'배열·탐색',n:'슬라이딩 윈도우',en:'Sliding Window',one:'고정 길이 구간을 한 칸씩 밀면서, 나간 값은 빼고 들어온 값만 더한다.',
+when:'"연속된 k개", "길이 k 구간의 최대 합/평균", 조건 만족하는 최장·최단 부분 배열(가변 윈도우).',cx:'O(n) — 매번 다시 더하면 O(n·k)',
+tip:'가변 윈도우는 투 포인터와 같은 원리: 조건 깨지면 왼쪽을 줄이고, 아니면 오른쪽을 늘림.',
+code:`def max_window(a, k):
+    s = sum(a[:k]); best = s
+    for i in range(k, len(a)):
+        s += a[i] - a[i-k]       # 들어온 값 더하고, 나간 값 빼기
+        best = max(best, s)
+    return best`,
+gen(){const a=[2,1,5,1,3,2,4],k=3,F=[];let s=a[0]+a[1]+a[2],best=s;
+ F.push({msg:`첫 윈도우 2+1+5 = ${s}. 최댓값 = ${best}`,rows:[R('배열 (윈도우 길이 3)',a,i=>i<k?'in':'',i=>i===0?'시작':'')]});
+ for(let i=k;i<a.length;i++){const o=a[i-k];s+=a[i]-o;const nb=s>best;best=Math.max(best,s);
+  F.push({msg:`밀기: −${o} (나감) +${a[i]} (들어옴) → 합 ${s}${nb?' · 최댓값 갱신!':''}`,rows:[R('배열 (윈도우 길이 3)',a,j=>j===i?'hl':j===i-k?'alt':j>i-k&&j<=i?'in':'',j=>j===i-k?'−':j===i?'+':''),R('현재 합 / 최댓값',[s,best],(j)=>j===1&&nb?'hl':'ok')]})}
+ F.push({msg:`끝! 길이 3 구간의 최대 합 = ${best}. 매번 3개를 다시 더하지 않았어요.`,rows:[R('최댓값',[best],()=>'ok')]});return F}},
+
+{id:'bin',g:'배열·탐색',n:'이분 탐색',en:'Binary Search',one:'정렬된 범위의 가운데를 보고, 답이 없는 절반을 통째로 버린다.',
+when:'정렬된 배열에서 찾기, "최솟값의 최댓값"·"조건을 만족하는 최소 x" (파라메트릭 서치), n이 10⁵ 이상.',cx:'O(log n) — 10억 개도 약 30번',
+tip:'lo ≤ hi 조건, mid ± 1 경계를 정확히. 파이썬은 bisect_left / bisect_right 활용.',
+code:`def binary_search(a, x):
+    lo, hi = 0, len(a) - 1
+    while lo <= hi:
+        mid = (lo + hi) // 2
+        if a[mid] == x: return mid
+        if a[mid] < x: lo = mid + 1    # 오른쪽 절반만 남김
+        else:          hi = mid - 1    # 왼쪽 절반만 남김
+    return -1
+
+from bisect import bisect_left        # 내장 이분 탐색
+i = bisect_left(a, x)`,
+gen(){const a=[1,3,5,7,9,11,13,15],x=13,F=[];let lo=0,hi=7;
+ const S=(m,mid,ok)=>F.push({msg:m,rows:[R('정렬된 배열 · 찾는 값 13',a,k=>k===mid?(ok?'ok':'hl'):(k<lo||k>hi)?'dim':'in',k=>[k===lo?'lo':'',k===mid?'mid':'',k===hi?'hi':''].filter(Boolean).join(' '))]});
+ S('전체 범위 lo=0 ~ hi=7에서 시작.',-1);
+ while(lo<=hi){const mid=(lo+hi)>>1;if(a[mid]===x){S(`a[${mid}] = ${a[mid]} = 13 → 찾음! 단 ${F.length}번 만에.`,mid,true);break}
+  if(a[mid]<x){S(`a[${mid}] = ${a[mid]} < 13 → 왼쪽 절반 버림`,mid);lo=mid+1}else{S(`a[${mid}] = ${a[mid]} > 13 → 오른쪽 절반 버림`,mid);hi=mid-1}}
+ return F}},
+
+{id:'prefix',g:'배열·탐색',n:'누적 합',en:'Prefix Sum',one:'P[i] = 앞에서부터 i개의 합을 미리 만들어 두면, 구간 합은 뺄셈 한 번.',
+when:'구간 합 질문이 여러 번(쿼리 많음), 2차원 영역 합, "합이 K인 부분 배열 개수"(누적합 + 해시).',cx:'전처리 O(n) · 질문당 O(1)',
+tip:'a[i..j] 합 = P[j+1] − P[i]. P 앞에 0을 하나 두는 게 인덱스 실수 방지 요령.',
+code:`P = [0]
+for x in a:
+    P.append(P[-1] + x)          # P[i] = a[0..i-1]의 합
+
+def range_sum(i, j):             # a[i..j] (양끝 포함)
+    return P[j+1] - P[i]`,
+gen(){const a=[3,1,4,1,5,9,2],P=[0],F=[];
+ F.push({msg:'P[0] = 0 으로 시작 (아무것도 안 더한 합).',rows:[R('a',a),R('P',P,null,k=>'P'+k)]});
+ a.forEach((x,i)=>{P.push(P[i]+x);F.push({msg:`P[${i+1}] = P[${i}] + a[${i}] = ${P[i]} + ${x} = ${P[i+1]}`,rows:[R('a',a,k=>k===i?'hl':k<i?'ok':''),R('P',P,k=>k===i+1?'hl':k===i?'in':'ok',k=>'P'+k)]})});
+ F.push({msg:'질문: a[2..4] (4+1+5)의 합은? → P[5] − P[2]',rows:[R('a',a,k=>k>=2&&k<=4?'in':'dim'),R('P',P,k=>k===5||k===2?'hl':'',k=>'P'+k)]});
+ F.push({msg:`P[5] − P[2] = ${P[5]} − ${P[2]} = ${P[5]-P[2]} ✓ 몇 개를 묻든 뺄셈 한 번!`,rows:[R('a',a,k=>k>=2&&k<=4?'ok':'dim'),R('답',[P[5]-P[2]],()=>'ok')]});return F}},
+
+{id:'interval',g:'배열·탐색',n:'구간 병합',en:'Merge Intervals',one:'시작점 기준으로 정렬한 뒤, 직전 구간과 겹치면 끝을 늘리고 안 겹치면 새로 시작.',
+when:'회의실 배정, 겹치는 일정 합치기, 선분 덮기, "총 길이" 구하기.',cx:'정렬 O(n log n) + 한 번 훑기 O(n)',
+tip:'겹침 판정: 새 시작 ≤ 직전 끝. 끝은 max로 갱신(안에 쏙 들어가는 구간 주의).',
+code:`def merge_intervals(iv):
+    iv.sort()                        # 시작점 기준 정렬
+    out = [iv[0]]
+    for s, e in iv[1:]:
+        if s <= out[-1][1]:          # 겹침
+            out[-1][1] = max(out[-1][1], e)
+        else:
+            out.append([s, e])
+    return out`,
+gen(){const iv=[[1,3],[2,6],[8,10],[9,12],[15,18]],F=[],out=[];const mx=19;
+ const S=(m,cur)=>F.push({msg:m,bars:{max:mx,lanes:[{l:'입력 (시작점 정렬됨)',stack:true,items:iv.map((x,k)=>({a:x[0],b:x[1],c:k===cur?'hl':k<cur?'ok':''}))},{l:'병합 결과',items:out.map((x,k)=>({a:x[0],b:x[1],c:k===out.length-1&&cur<iv.length?'in':'ok'}))}]}});
+ S('구간들을 시작점 순으로 정렬해 둡니다.',-1);
+ iv.forEach(([s,e],k)=>{if(!out.length){out.push([s,e]);S(`첫 구간 [${s},${e}] 을 결과에 넣음`,k);return}const last=out[out.length-1];
+  if(s<=last[1]){const ol=last[1];last[1]=Math.max(last[1],e);S(`[${s},${e}]: 시작 ${s} ≤ 직전 끝 ${ol} → 겹침! 끝을 ${last[1]}로 늘림`,k)}else{out.push([s,e]);S(`[${s},${e}]: 시작 ${s} > 직전 끝 ${last[1]} → 안 겹침, 새 구간`,k)}});
+ S(`완료: ${out.map(x=>`[${x}]`).join(' ')}`,iv.length);return F}},
+
+/* ===== 자료구조 ===== */
+{id:'hash',g:'자료구조',n:'빈도수 계산 (해시)',en:'Hash Map Counting',one:'딕셔너리에 "값 → 등장 횟수"를 기록. 찾기·갱신이 평균 O(1).',
+when:'등장 횟수, 중복 확인, 아나그램, "두 수의 합"(본 적 있는 값 저장), 그룹 묶기.',cx:'O(n) · 조회/갱신 평균 O(1)',
+tip:'collections.Counter, defaultdict(int) 를 쓰면 코드가 짧아진다. "본 적 있나?" = set/dict.',
+code:`from collections import Counter
+cnt = Counter("banana")          # {'a': 3, 'n': 2, 'b': 1}
+cnt.most_common(1)               # [('a', 3)]
+
+# 직접 구현
+cnt = {}
+for ch in "banana":
+    cnt[ch] = cnt.get(ch, 0) + 1`,
+gen(){const s=[...'banana'],d={},F=[];const dr=hl=>R('딕셔너리',Object.keys(d).map(k=>`${k}:${d[k]}`),(i,v)=>v[0]===hl?'hl':'in');
+ F.push({msg:'빈 딕셔너리로 시작. 글자를 하나씩 보며 횟수를 1 올립니다.',rows:[R('문자열',s),dr()]});
+ s.forEach((ch,i)=>{const nw=!(ch in d);d[ch]=(d[ch]||0)+1;F.push({msg:nw?`'${ch}' 처음 봄 → ${ch}:1 추가`:`'${ch}' 이미 있음 → ${ch}:${d[ch]} (O(1)로 바로 찾아 갱신)`,rows:[R('문자열',s,k=>k===i?'hl':k<i?'ok':''),dr(ch)]})});
+ F.push({msg:'완료! 가장 많이 나온 글자는 a (3번).',rows:[dr('a')]});return F}},
+
+{id:'mono',g:'자료구조',n:'모노톤 스택',en:'Monotonic Stack',one:'스택을 항상 내림차순(또는 오름차순)으로 유지. 규칙을 깨는 값이 오면 pop하며 답을 확정.',
+when:'"오른쪽에서 처음 나오는 더 큰 수"(오큰수), 주식 가격, 온도가 오르기까지 며칠, 히스토그램 최대 직사각형.',cx:'O(n) — 각 원소가 한 번 push, 한 번 pop',
+tip:'스택에는 값이 아니라 인덱스를 넣는 게 보통. pop되는 순간 = 그 원소의 답이 정해지는 순간.',
+code:`def next_greater(a):
+    ans, st = [-1] * len(a), []      # st: 인덱스 (값은 내림차순 유지)
+    for i, x in enumerate(a):
+        while st and a[st[-1]] < x:  # x가 더 크면 → 그들의 답은 x
+            ans[st.pop()] = x
+        st.append(i)
+    return ans                       # 끝까지 남은 건 -1`,
+gen(){const a=[2,1,2,4,3],ans=a.map(()=>'?'),st=[],F=[];
+ const S=(m,i,hi)=>F.push({msg:m,rows:[R('배열 (각 수의 오른쪽 첫 큰 수 찾기)',a,k=>k===i?'hl':k<i?'':'dim'),R('스택 (아래 → 위)',st.map(j=>a[j]),(k)=>k===st.length-1?'in':'alt',k=>'#'+st[k]),R('답',ans,(k,v)=>k===hi?'hl':v==='?'?'':'ok')]});
+ S('스택은 비어 있음. 왼쪽부터 하나씩 봅니다.',-1);
+ a.forEach((x,i)=>{while(st.length&&a[st[st.length-1]]<x){const j=st.pop();ans[j]=x;S(`${x} 등장: 스택 꼭대기 ${a[j]} < ${x} → #${j}의 답은 ${x}! pop`,i,j)}st.push(i);S(`${x} push → 스택은 위로 갈수록 작거나 같게 유지`,i)});
+ st.forEach(j=>ans[j]=-1);S('끝까지 남은 원소는 더 큰 수가 없음 → -1',a.length);return F}},
+
+{id:'heap',g:'자료구조',n:'Top-K (최소 힙)',en:'Heap / Priority Queue',one:'크기 K인 최소 힙을 유지하면서, 넘치면 가장 작은 값을 버린다. 남은 K개가 상위 K개.',
+when:'상위/하위 K개, K번째로 큰 수, 계속 들어오는 값 중 최솟값 꺼내기, 다익스트라·스케줄링.',cx:'push/pop O(log K) · 전체 O(n log K)',
+tip:'파이썬 heapq는 최소 힙. 최대 힙이 필요하면 값에 −를 붙여 넣는다. h[0]이 항상 최솟값.',
+code:`import heapq
+def top_k(a, k):
+    h = []
+    for x in a:
+        heapq.heappush(h, x)
+        if len(h) > k:
+            heapq.heappop(h)     # 가장 작은 값 버림
+    return h                     # h[0] = K번째로 큰 수
+
+# 최대 힙: heapq.heappush(h, -x) / -heapq.heappop(h)`,
+gen(){const a=[3,1,5,2,7,6,4],K=3,h=[],F=[];const P=[[165,30],[95,100],[235,100],[55,170]];
+ const up=i=>{while(i>0){const p=(i-1)>>1;if(h[p]<=h[i])break;[h[p],h[i]]=[h[i],h[p]];i=p}};
+ const dn=i=>{for(;;){let m=i;const l=2*i+1,r=l+1;if(l<h.length&&h[l]<h[m])m=l;if(r<h.length&&h[r]<h[m])m=r;if(m===i)break;[h[m],h[i]]=[h[i],h[m]];i=m}};
+ const S=(m,ci,rootHl)=>F.push({msg:m,graph:{w:330,h:200,nodes:h.map((v,i)=>({id:String(i),x:P[i][0],y:P[i][1],lab:String(v),c:i===0&&rootHl?'hl':i===0?'in':''})),edges:h.map((_,i)=>i?{a:String((i-1)>>1),b:String(i)}:null).filter(Boolean)},rows:[R('입력',a,k=>k===ci?'hl':k<ci?'ok':'')]});
+ S('K = 3. 최소 힙(부모 ≤ 자식)을 비운 채 시작.',-1);
+ a.forEach((x,i)=>{h.push(x);up(h.length-1);if(h.length>K){S(`${x} push → 크기 4 > K. 루트(최솟값) ${h[0]}을 버릴 차례`,i,true);const m=h[0];const last=h.pop();if(h.length){h[0]=last;dn(0)}S(`${m} pop → 상위 3개 후보만 남음`,i)}else S(`${x} push → 힙 정리(작은 값이 위로)`,i)});
+ S(`끝! 힙 = 상위 3개 {${[...h].sort((p,q)=>p-q)}}, 루트 ${h[0]} = 3번째로 큰 수`,a.length,true);return F}},
+
+{id:'snail',g:'자료구조',n:'2차원 배열 순회',en:'2D Grid · Spiral',one:'방향 배열(dr, dc)로 이동하다가, 벽이나 이미 채운 칸을 만나면 방향을 바꾼다.',
+when:'달팽이 배열, 격자 시뮬레이션(로봇 이동), 배열 회전, 상하좌우 이웃 탐색.',cx:'O(n·m) — 모든 칸 한 번씩',
+tip:'dr=[0,1,0,-1], dc=[1,0,-1,0] (→↓←↑) 패턴 암기. 범위 체크 0 ≤ r < n 을 먼저!',
+code:`def snail(n):
+    g = [[0] * n for _ in range(n)]
+    dr, dc = [0, 1, 0, -1], [1, 0, -1, 0]   # → ↓ ← ↑
+    r = c = d = 0
+    for v in range(1, n * n + 1):
+        g[r][c] = v
+        nr, nc = r + dr[d], c + dc[d]
+        if not (0 <= nr < n and 0 <= nc < n) or g[nr][nc]:
+            d = (d + 1) % 4                  # 막히면 시계 방향 회전
+            nr, nc = r + dr[d], c + dc[d]
+        r, c = nr, nc
+    return g`,
+gen(){const n=4,g=Array(n*n).fill(0),dr=[0,1,0,-1],dc=[1,0,-1,0],an=['→','↓','←','↑'],F=[];let r=0,c=0,d=0;
+ F.push({msg:'4×4 빈 격자. (0,0)에서 → 방향으로 출발.',grid:{cols:n,cells:g.map(()=>({v:'',c:''}))}});
+ for(let v=1;v<=n*n;v++){g[r*n+c]=v;let nr=r+dr[d],nc=c+dc[d],turn=false;if(v<n*n&&(nr<0||nr>=n||nc<0||nc>=n||g[nr*n+nc])){d=(d+1)%4;nr=r+dr[d];nc=c+dc[d];turn=true}
+  const cur=r*n+c;F.push({msg:`(${r},${c})에 ${v}${v===n*n?' — 완료!':turn?` · 앞이 막힘 → 방향 회전 ${an[d]}`:` · 계속 ${an[d]}`}`,grid:{cols:n,cells:g.map((x,i)=>({v:x||'',c:i===cur?'hl':x?'ok':''}))}});r=nr;c=nc}
+ return F}},
+
+/* ===== 전략 ===== */
+{id:'greedy',g:'전략',n:'그리디 (탐욕법)',en:'Greedy',one:'매 순간 지금 가장 좋아 보이는 것을 고른다. 단, 그게 전체 최선이라는 근거가 있어야 한다.',
+when:'거스름돈(배수 관계 동전), 회의실 배정(끝나는 시간 순), 최소 신장 트리, "정렬 후 앞에서부터".',cx:'대개 정렬 O(n log n) + O(n)',
+tip:'반례 하나로 깨진다. 동전이 배수 관계가 아니면 DP로 가야 함 → 오른쪽 탭에서 확인.',vars:['거스름돈 1260원','반례: 동전 4·3·1'],
+code:`def coins(amount, units=(500, 100, 50, 10)):
+    cnt = 0
+    for u in units:              # 큰 단위부터 욕심껏
+        cnt += amount // u
+        amount %= u
+    return cnt
+
+# 회의실 배정: 끝나는 시간이 빠른 순으로 고르기
+meet.sort(key=lambda x: (x[1], x[0]))`,
+gen(v){const F=[];if(v===0){let amt=1260;const u=[500,100,50,10],used=[];
+  F.push({msg:'1260원을 동전 개수 최소로. 큰 동전부터 최대한 씁니다.',rows:[R('동전 단위',u),R('남은 금액',[amt],()=>'in')]});
+  u.forEach((x,i)=>{const k=Math.floor(amt/x);amt%=x;for(let t=0;t<k;t++)used.push(x);F.push({msg:`${x}원 ${k}개 사용 → 남은 ${amt}원`,rows:[R('동전 단위',u,j=>j===i?'hl':j<i?'ok':''),R('남은 금액',[amt],()=>'in'),R('사용한 동전',used,(j,y)=>y===x?'hl':'ok')]})});
+  F.push({msg:`총 ${used.length}개. 큰 동전이 작은 동전의 배수라서 그리디가 항상 최적.`,rows:[R('사용한 동전',used,()=>'ok')]})}
+ else{let amt=6;const u=[4,3,1],used=[];F.push({msg:'동전 4·3·1로 6원 만들기. 그리디로 해보면?',rows:[R('동전 단위',u),R('남은 금액',[amt],()=>'in')]});
+  u.forEach((x,i)=>{const k=Math.floor(amt/x);amt%=x;for(let t=0;t<k;t++)used.push(x);F.push({msg:`${x}원 ${k}개 → 남은 ${amt}원`,rows:[R('동전 단위',u,j=>j===i?'hl':j<i?'ok':''),R('그리디 선택',used,()=>'ok')]})});
+  F.push({msg:'그리디 4+1+1 = 3개 ✗  /  최적 3+3 = 2개 ✓ — 지금 최선 ≠ 전체 최선. 이럴 땐 DP!',rows:[R('그리디',used,()=>'bad'),R('최적',[3,3],()=>'ok')]})}
+ return F}},
+
+{id:'dp',g:'전략',n:'동적 계획법 (DP)',en:'Dynamic Programming',one:'큰 문제를 겹치는 작은 문제로 쪼개고, 한 번 구한 답은 표에 저장해 재사용.',
+when:'"경우의 수", "최대/최소 비용", 배낭 문제, LIS, LCS, 격자 경로. 그리디 반례가 있을 때.',cx:'(상태 개수) × (상태당 계산) — 피보나치 O(n), 격자 O(n·m)',
+tip:'① dp[i]의 뜻 정의 ② 점화식 ③ 초기값 ④ 계산 순서. 이 4개를 먼저 적고 코딩.',vars:['1D: 피보나치','2D: 격자 경로'],
+code:`# 1D: 피보나치 (바텀업)
+dp = [0] * (n + 1); dp[1] = 1
+for i in range(2, n + 1):
+    dp[i] = dp[i-1] + dp[i-2]
+
+# 2D: 오른쪽·아래로만 이동하는 경로 수
+dp = [[1] * m for _ in range(n)]       # 첫 행·첫 열은 1가지
+for r in range(1, n):
+    for c in range(1, m):
+        dp[r][c] = dp[r-1][c] + dp[r][c-1]`,
+gen(v){const F=[];if(v===0){const n=9,dp=Array(n).fill('·');dp[0]=0;dp[1]=1;
+  F.push({msg:'dp[i] = i번째 피보나치 수. 초기값 dp[0]=0, dp[1]=1.',rows:[R('dp',dp,k=>k<2?'ok':'',k=>String(k))]});
+  for(let i=2;i<n;i++){dp[i]=dp[i-1]+dp[i-2];F.push({msg:`dp[${i}] = dp[${i-1}] + dp[${i-2}] = ${dp[i-1]} + ${dp[i-2]} = ${dp[i]} (표에서 꺼내 씀, 재계산 없음)`,rows:[R('dp',dp,k=>k===i?'hl':k===i-1||k===i-2?'in':k<i?'ok':'',k=>String(k))]})}
+  F.push({msg:'저장 없는 재귀는 같은 값을 수없이 다시 계산 → O(2ⁿ). 표에 저장하면 O(n).',rows:[R('dp',dp,()=>'ok',k=>String(k))]})}
+ else{const n=4,m=4,d=Array(n*m).fill('');F.push({msg:'왼쪽 위 → 오른쪽 아래, 오른쪽·아래로만 이동. 각 칸 = 그 칸까지 가는 경로 수.',grid:{cols:m,cells:d.map(()=>({v:'',c:''}))}});
+  for(let r=0;r<n;r++)for(let c=0;c<m;c++){const i=r*m+c;if(!r||!c){d[i]=1}else d[i]=d[i-m]+d[i-1];
+   F.push({msg:!r||!c?`(${r},${c}) 첫 행/첫 열 → 한 줄로만 오니까 1가지`:`(${r},${c}) = 위 ${d[i-m]} + 왼쪽 ${d[i-1]} = ${d[i]}`,grid:{cols:m,cells:d.map((x,j)=>({v:x,c:j===i?'hl':(r&&c&&(j===i-m||j===i-1))?'in':x!==''?'ok':''}))}})}
+  F.push({msg:'도착점까지 경로 20가지. 작은 답(위·왼쪽)을 재사용해서 계산했어요.',grid:{cols:m,cells:d.map((x,j)=>({v:x,c:j===n*m-1?'hl':'ok'}))}})}
+ return F}},
+
+{id:'back',g:'전략',n:'백트래킹',en:'Backtracking',one:'한 칸씩 선택을 쌓아가다 조건이 깨지면 바로 되돌아가(가지치기) 다른 선택을 시도.',
+when:'N-Queen, 순열·조합 만들기, 스도쿠, 부분집합, "모든 경우 중 조건 만족" + n이 작음(≤ 10~15).',cx:'최악 지수 시간 — 가지치기로 실제 탐색량을 줄이는 게 핵심',
+tip:'선택 → 재귀 → 선택 취소(pop) 3단 구조. 조건 검사를 재귀 들어가기 "전"에 해야 빠르다.',
+code:`def n_queen(n):
+    cols, res = [], []                 # cols[r] = r행 퀸의 열
+    def ok(r, c):
+        return all(c != pc and abs(c - pc) != r - pr
+                   for pr, pc in enumerate(cols))
+    def go(r):
+        if r == n: res.append(cols[:]); return
+        for c in range(n):
+            if ok(r, c):
+                cols.append(c)         # 선택
+                go(r + 1)              # 다음 행
+                cols.pop()             # 되돌리기
+    go(0)
+    return res`,
+gen(){const n=4,cols=[],F=[];let solved=false;
+ const S=(m,tr,tc,bad)=>{const cells=[];for(let r=0;r<n;r++)for(let c=0;c<n;c++){const q=cols[r]===c;cells.push({v:q?'Q':(r===tr&&c===tc?(bad?'×':'Q'):''),c:r===tr&&c===tc?(bad?'bad':'hl'):q?'ok':''})}F.push({msg:m,grid:{cols:n,cells}})};
+ const ok=(r,c)=>cols.every((pc,pr)=>pc!==c&&Math.abs(pc-c)!==r-pr);
+ S('4×4 판에 퀸 4개를 서로 공격 못 하게 놓기. 한 행에 하나씩.',-1,-1);
+ const go=r=>{if(r===n){solved=true;S('4개 모두 배치 성공! 해 = 열 [1, 3, 0, 2]',-1,-1);return}
+  for(let c=0;c<n&&!solved;c++){if(ok(r,c)){cols.push(c);S(`${r}행 ${c}열에 퀸 놓기 (안전)`,-1,-1);go(r+1);if(!solved){cols.pop();S(`${r}행 ${c}열로는 끝까지 못 감 → 퀸 회수(되돌아가기)`,r,c,true)}}else S(`${r}행 ${c}열: 기존 퀸과 같은 열/대각선 → 충돌, 건너뜀`,r,c,true)}};
+ go(0);return F}},
+
+/* ===== 그래프 ===== */
+{id:'tree',g:'그래프',n:'이진 트리 순회',en:'Tree Traversal',one:'루트를 언제 방문하느냐로 세 가지: 전위(먼저) · 중위(가운데) · 후위(나중).',
+when:'트리 출력, BST 정렬 결과(중위), 트리 복사(전위), 하위부터 계산·삭제(후위).',cx:'O(n) — 모든 노드 한 번',
+tip:'BST를 중위 순회하면 오름차순! 전위/중위 결과로 트리 복원하는 문제도 단골.',vars:['전위 (루트→왼→오)','중위 (왼→루트→오)','후위 (왼→오→루트)'],
+code:`def pre(n):     # 루트 → 왼쪽 → 오른쪽
+    if n: print(n.val); pre(n.left); pre(n.right)
+
+def ino(n):     # 왼쪽 → 루트 → 오른쪽  (BST면 오름차순)
+    if n: ino(n.left); print(n.val); ino(n.right)
+
+def post(n):    # 왼쪽 → 오른쪽 → 루트
+    if n: post(n.left); post(n.right); print(n.val)`,
+gen(v){const P={4:[165,30],2:[95,100],6:[235,100],1:[55,170],3:[135,170],5:[195,170],7:[275,170]},ch={4:[2,6],2:[1,3],6:[5,7]},E=[[4,2],[4,6],[2,1],[2,3],[6,5],[6,7]],out=[],F=[];
+ const S=(m,cur)=>F.push({msg:m,graph:{w:330,h:205,nodes:Object.keys(P).map(id=>({id,x:P[id][0],y:P[id][1],c:+id===cur?'hl':out.includes(+id)?'ok':''})),edges:E.map(([a,b])=>({a:String(a),b:String(b)}))},rows:[R('방문 순서',out,(k)=>k===out.length-1?'hl':'ok')]});
+ const nm=['전위','중위','후위'][v];S(`${nm} 순회 시작. 빨간 노드 = 지금 출력하는 노드.`,-1);
+ const go=n=>{if(!n)return;const[l,r]=ch[n]||[];if(v===0){out.push(n);S(`${n} 출력 (루트를 먼저)`,n)}go(l);if(v===1){out.push(n);S(`${n} 출력 (왼쪽 다 본 뒤)`,n)}go(r);if(v===2){out.push(n);S(`${n} 출력 (자식 둘 다 본 뒤)`,n)}};
+ go(4);S(`${nm} 결과: ${out.join(' → ')}${v===1?'  ← BST라서 오름차순!':''}`,-1);return F}},
+
+{id:'dfs',g:'그래프',n:'깊이 우선 탐색 (DFS)',en:'Depth-First Search',one:'한 갈래를 끝까지 파고들고, 막히면 되돌아와 다른 갈래로. 스택(재귀)을 쓴다.',
+when:'연결 요소 개수, 경로 존재 여부, 사이클 탐지, 백트래킹, 섬의 개수.',cx:'O(V + E)',
+tip:'파이썬 재귀는 기본 깊이 1000 → sys.setrecursionlimit(10**6). 최단 거리는 보장 안 됨!',
+code:`import sys; sys.setrecursionlimit(10**6)
+visited = set()
+def dfs(u):
+    visited.add(u)
+    for v in graph[u]:
+        if v not in visited:
+            dfs(v)              # 갈 수 있으면 더 깊이`,
+gen(){const vis=[],path=[],used=[],F=[];
+ const S=(m,cur)=>F.push({msg:m,graph:{w:330,h:200,nodes:gnodes(G7,id=>id===cur?'hl':path.includes(id)?'in':vis.includes(id)?'ok':''),edges:G7E.map(([a,b])=>({a,b,c:used.some(([x,y])=>(x===a&&y===b)||(x===b&&y===a))?'ok':''}))},rows:[R('스택 (현재 경로)',path,k=>k===path.length-1?'hl':'in'),R('방문 순서',vis,()=>'ok')]});
+ S('A에서 시작. 이웃은 알파벳 순으로 봅니다.',null);
+ const go=u=>{vis.push(u);path.push(u);S(`${u} 방문 → 더 깊이 갈 곳 찾기`,u);for(const w of adj7[u]){if(!vis.includes(w)){used.push([u,w]);go(w);S(`${u}로 되돌아옴 → 남은 이웃 확인`,u)}}path.pop();S(`${u}: 갈 곳 없음 → 스택에서 pop (되돌아가기)`,path[path.length-1])};
+ go('A');S(`완료! DFS 순서 ${vis.join(' → ')}`,null);return F}},
+
+{id:'bfs',g:'그래프',n:'너비 우선 탐색 (BFS)',en:'Breadth-First Search',one:'가까운 노드부터 한 겹씩 퍼져 나간다. 큐를 쓰고, 처음 도착한 거리가 곧 최단 거리.',
+when:'가중치 없는 그래프·미로의 최단 거리, 최소 이동 횟수, 단계별 확산(토마토, 불 번짐).',cx:'O(V + E)',
+tip:'collections.deque의 popleft() 필수(list.pop(0)은 O(n)). 큐에 넣을 때 방문 처리해야 중복이 안 생김.',
+code:`from collections import deque
+def bfs(s):
+    dist = {s: 0}
+    q = deque([s])
+    while q:
+        u = q.popleft()
+        for v in graph[u]:
+            if v not in dist:           # 넣을 때 방문 처리
+                dist[v] = dist[u] + 1
+                q.append(v)
+    return dist`,
+gen(){const dist={A:0},q=['A'],order=[],F=[];
+ const S=(m,cur,nw)=>F.push({msg:m,graph:{w:330,h:200,nodes:gnodes(G7,id=>id===cur?'hl':nw&&nw.includes(id)?'in':order.includes(id)?'ok':id in dist?'in':'',id=>id in dist?'거리 '+dist[id]:''),edges:G7E.map(([a,b])=>({a,b,c:(order.includes(a)&&order.includes(b))?'ok':''}))},rows:[R('큐 (앞 → 뒤)',q,k=>k===0?'hl':'alt'),R('방문 순서',order,()=>'ok')]});
+ S('A를 큐에 넣고 시작. 거리 0.',null);
+ while(q.length){const u=q.shift();order.push(u);const nw=[];for(const w of adj7[u])if(!(w in dist)){dist[w]=dist[u]+1;q.push(w);nw.push(w)}
+  S(nw.length?`${u} 꺼냄 → 처음 보는 이웃 ${nw.join(', ')}을 거리 ${dist[u]+1}로 큐 뒤에 넣음`:`${u} 꺼냄 → 새 이웃 없음`,u,nw)}
+ S(`완료! 거리 0 → 1 → 2 → 3 순서로 한 겹씩 퍼졌어요.`,null);return F}},
+
+{id:'dijk',g:'그래프',n:'다익스트라',en:'Dijkstra',one:'아직 확정 안 된 노드 중 거리가 가장 짧은 것을 확정하고, 그 이웃의 거리를 갱신.',
+when:'가중치(양수) 있는 그래프의 한 출발점 최단 거리 — 도로, 비용, 시간.',cx:'O(E log V) (heapq 사용)',
+tip:'음수 간선이 있으면 안 됨(벨만-포드). 힙에서 꺼낸 d > dist[u]면 낡은 항목이니 continue.',
+code:`import heapq
+def dijkstra(s):
+    dist = {v: float('inf') for v in graph}
+    dist[s] = 0
+    pq = [(0, s)]
+    while pq:
+        d, u = heapq.heappop(pq)       # 가장 가까운 노드
+        if d > dist[u]: continue       # 낡은 항목 무시
+        for v, w in graph[u]:
+            if d + w < dist[v]:        # 더 짧은 길 발견 → 갱신
+                dist[v] = d + w
+                heapq.heappush(pq, (dist[v], v))
+    return dist`,
+gen(){const P={A:[40,105],B:[165,35],C:[165,175],D:[290,105]},E=[['A','B',4],['A','C',1],['C','B',2],['B','D',1],['C','D',5]];
+ const dist={A:0,B:Infinity,C:Infinity,D:Infinity},prev={},done=[],pq=[[0,'A']],F=[];
+ const S=(m,cur,he)=>F.push({msg:m,graph:{w:330,h:210,nodes:gnodes(P,id=>id===cur?'hl':done.includes(id)?'ok':dist[id]<Infinity?'in':'',id=>dist[id]===Infinity?'∞':String(dist[id])),edges:E.map(([a,b,w])=>({a,b,w,c:he&&((he[0]===a&&he[1]===b)||(he[0]===b&&he[1]===a))?'hl':(prev[b]===a||prev[a]===b)?'ok':''}))},rows:[R('우선순위 큐 (거리, 노드)',[...pq].sort((x,y)=>x[0]-y[0]).map(x=>`${x[0]},${x[1]}`),k=>k===0?'hl':'alt')]});
+ S('출발 A = 0, 나머지는 ∞. 노드 아래 숫자 = 현재까지 최단 거리.',null);
+ while(pq.length){pq.sort((x,y)=>x[0]-y[0]);const[d,u]=pq.shift();if(d>dist[u]){S(`(${d},${u}) 꺼냄 → 이미 더 짧은 ${dist[u]}로 확정됨, 무시`,null);continue}done.push(u);S(`큐에서 가장 가까운 ${u}(${d}) 꺼냄 → 확정!`,u);
+  for(const[a,b,w]of E){const v=a===u?b:b===u?a:null;if(!v||done.includes(v))continue;const nd=d+w;
+   if(nd<dist[v]){const od=dist[v];dist[v]=nd;prev[v]=u;pq.push([nd,v]);S(`${u}→${v}: ${d}+${w} = ${nd} < ${od===Infinity?'∞':od} → 갱신`,u,[u,v])}else S(`${u}→${v}: ${d}+${w} = ${nd} ≥ ${dist[v]} → 그대로`,u,[u,v])}}
+ S('완료! 굵은 선 = 최단 경로 트리. A→B는 직행(4)보다 C 경유(1+2=3)가 짧아요.',null);return F}},
+
+{id:'path',g:'그래프',n:'길찾기 4종 비교 · A*',en:'BFS · DFS · Dijkstra · A*',one:'같은 지도라도 "가장 적게 걷기(BFS)"와 "가장 싸게 가기(다익스트라·A*)"는 다르다.',
+when:'격자 최단 경로. 칸마다 비용이 다르면 다익스트라, 목표 위치를 알면 A*로 탐색량 절약.',cx:'BFS/DFS O(V+E) · 다익스트라·A* O(E log V)',
+tip:'A* = 다익스트라 + 휴리스틱 h(맨해튼 거리). f = g(지금까지 비용) + h(남은 예상). h가 과대평가만 안 하면 최단 보장.',vars:['BFS','DFS','다익스트라','A*'],
+code:`import heapq
+def astar(s, g):                    # 격자, 상하좌우
+    h = lambda p: abs(p[0]-g[0]) + abs(p[1]-g[1])   # 맨해튼 거리
+    cost = {s: 0}
+    pq = [(h(s), s)]
+    while pq:
+        f, u = heapq.heappop(pq)
+        if u == g: return cost[u]
+        for v, w in neighbors(u):           # w = 칸 비용 (1 또는 6)
+            nc = cost[u] + w
+            if nc < cost.get(v, float('inf')):
+                cost[v] = nc
+                heapq.heappush(pq, (nc + h(v), v))   # f = g + h
+# h = 0 으로 두면 그대로 다익스트라`,
+gen(v){const M=['....#....','..wwww...','S.wwww..G','..wwww...','.........','...#.....'],H=M.length,W=M[0].length;
+ const S0=[2,0],G0=[2,8],key=(r,c)=>r*W+c,ch=(r,c)=>M[r][c],cost=(r,c)=>ch(r,c)==='w'?6:1;
+ const nb=(r,c)=>[[0,1],[1,0],[0,-1],[-1,0]].map(([a,b])=>[r+a,c+b]).filter(([a,b])=>a>=0&&a<H&&b>=0&&b<W&&ch(a,b)!=='#');
+ const hh=(r,c)=>Math.abs(r-G0[0])+Math.abs(c-G0[1]);const closed=new Set(),front=new Set(),par={},F=[],nm=['BFS','DFS','다익스트라','A*'][v];
+ const view=(cur,path)=>({cols:W,cells:M.flatMap((row,r)=>[...row].map((x,c)=>{const k=key(r,c);let cl=x==='#'?'wall':path&&path.has(k)?'path':k===cur?'hl':closed.has(k)?'in':front.has(k)?'alt':'';if(x==='w'&&cl!=='path'&&cl!=='hl')cl=(cl?cl+' ':'')+'wt';return{v:x==='S'?'S':x==='G'?'G':x==='w'?'6':'',c:cl}}))});
+ F.push({msg:`${nm}: S → G. 회색 벽은 못 지나가고, 갈색 칸은 비용 6, 나머지는 1.`,grid:view(-1)});
+ const step=(r,c,extra)=>F.push({msg:`${nm} · ${closed.size}번째로 꺼낸 칸 (${r},${c})${extra||''}`,grid:view(key(r,c))});
+ const gk=key(...G0);let found=false;
+ if(v===0){const q=[S0];const seen=new Set([key(...S0)]);front.add(key(...S0));while(q.length){const[r,c]=q.shift();const k=key(r,c);front.delete(k);closed.add(k);step(r,c);if(k===gk){found=true;break}for(const[a,b]of nb(r,c)){const kk=key(a,b);if(!seen.has(kk)){seen.add(kk);par[kk]=k;q.push([a,b]);front.add(kk)}}}}
+ else if(v===1){const st=[[S0,-1]];while(st.length){const[[r,c],p]=st.pop();const k=key(r,c);if(closed.has(k))continue;par[k]=p;front.delete(k);closed.add(k);step(r,c);if(k===gk){found=true;break}const ns=nb(r,c).filter(([a,b])=>!closed.has(key(a,b)));for(let i=ns.length-1;i>=0;i--){st.push([ns[i],k]);front.add(key(...ns[i]))}}}
+ else{const g={};g[key(...S0)]=0;let seq=0;const pq=[[v===3?hh(...S0):0,0,seq++,S0,-1]];
+  while(pq.length){pq.sort((x,y)=>x[0]-y[0]||x[1]-y[1]||x[2]-y[2]);const[f,hv,,[r,c],p]=pq.shift();const k=key(r,c);if(closed.has(k))continue;par[k]=p;front.delete(k);closed.add(k);
+   step(r,c,v===3?` · g=${g[k]} + h=${hh(r,c)} = f ${g[k]+hh(r,c)}`:` · 누적 비용 ${g[k]}`);if(k===gk){found=true;break}
+   for(const[a,b]of nb(r,c)){const kk=key(a,b);if(closed.has(kk))continue;const ng=g[k]+cost(a,b);if(ng<(g[kk]??Infinity)){g[kk]=ng;const h=v===3?hh(a,b):0;pq.push([ng+h,h,seq++,[a,b],k]);front.add(kk)}}}}
+ if(found){const path=new Set();let k=gk,steps=0,cs=0;while(k!==-1&&k!==undefined){path.add(k);const r=Math.floor(k/W),c=k%W;if(k!==key(...S0)){steps++;cs+=cost(r,c)}k=par[k]}
+  const note=['이동 칸 수는 최소지만 비싼 칸을 그냥 지나감 (가중치 무시).','운 좋게 바로 도착했지만 최단 보장 없음 — 방향 순서가 바뀌면 엉뚱한 길로.','비싼 칸을 피해 돌아감 → 비용 최소 보장. 대신 사방으로 많이 탐색.','다익스트라와 같은 최소 비용인데, 목표 쪽으로 쏠려서 탐색한 칸이 더 적음.'][v];
+  F.push({msg:`${nm} 결과 — 탐색 ${closed.size}칸 · 이동 ${steps}칸 · 비용 ${cs}. ${note}`,grid:view(-1,path)})}
+ return F}},
+
+{id:'topo',g:'그래프',n:'위상 정렬',en:'Topological Sort',one:'들어오는 화살표(진입 차수)가 0인 노드부터 꺼내고, 꺼낼 때마다 나가는 화살표를 지운다.',
+when:'선수 과목, 작업 순서, 빌드 의존성 — "A를 해야 B를 할 수 있다" + 사이클 없는 방향 그래프(DAG).',cx:'O(V + E)',
+tip:'결과 개수 < 노드 수 → 사이클이 있다는 뜻. 답이 여러 개일 수 있음(문제가 사전순 요구하면 heapq).',
+code:`from collections import deque
+def topo(n, edges):
+    g = [[] for _ in range(n)]; indeg = [0] * n
+    for a, b in edges:
+        g[a].append(b); indeg[b] += 1
+    q = deque(i for i in range(n) if indeg[i] == 0)
+    order = []
+    while q:
+        u = q.popleft(); order.append(u)
+        for v in g[u]:
+            indeg[v] -= 1               # 화살표 지우기
+            if indeg[v] == 0: q.append(v)
+    return order                        # len < n 이면 사이클`,
+gen(){const P={A:[40,50],B:[40,160],C:[160,105],D:[285,50],E:[285,160]},E=[['A','C'],['B','C'],['C','D'],['C','E'],['B','E']],ind={A:0,B:0,C:2,D:1,E:2},rm=new Set(),q=['A','B'],out=[],F=[];
+ const S=(m,cur)=>F.push({msg:m,graph:{w:330,h:210,nodes:gnodes(P,id=>id===cur?'hl':out.includes(id)?'ok':q.includes(id)?'in':'',id=>'진입 '+ind[id]),edges:E.map(([a,b],i)=>({a,b,d:true,c:rm.has(i)?'dim':a===cur?'hl':''}))},rows:[R('큐 (진입 0)',q,()=>'in'),R('결과',out,()=>'ok')]});
+ S('각 노드 아래 = 진입 차수. 0인 A, B를 큐에 넣고 시작.',null);
+ while(q.length){const u=q.shift();out.push(u);const nw=[];E.forEach(([a,b],i)=>{if(a===u){ind[b]--;if(ind[b]===0){q.push(b);nw.push(b)}}});S(`${u} 꺼내 결과에 추가 → ${u}에서 나가는 화살표 지움${nw.length?` · ${nw.join(', ')} 진입 0 → 큐로`:''}`,u);E.forEach(([a],i)=>{if(a===u)rm.add(i)})}
+ S(`완료! ${out.join(' → ')} — 모든 화살표가 왼쪽에서 오른쪽을 향하는 순서.`,null);return F}},
+
+{id:'uf',g:'그래프',n:'유니온 파인드',en:'Union-Find (Disjoint Set)',one:'각 원소가 부모를 가리키고, 루트가 같으면 같은 집합. 합칠 땐 루트끼리 연결.',
+when:'같은 그룹인지 빠르게 판정, 친구 네트워크, 사이클 판정, 크루스칼 MST.',cx:'경로 압축 시 거의 O(1) (α(n))',
+tip:'find에서 경로 압축(parent[x] = find(parent[x]))을 꼭 넣을 것. union은 루트끼리!',
+code:`parent = list(range(n))
+def find(x):
+    if parent[x] != x:
+        parent[x] = find(parent[x])    # 경로 압축
+    return parent[x]
+
+def union(a, b):
+    a, b = find(a), find(b)
+    if a != b: parent[b] = a           # 루트끼리 연결
+
+same = find(x) == find(y)`,
+gen(){const P={A:[50,55],B:[50,165],C:[165,55],D:[165,165],E:[280,55],F:[280,165]},ids=Object.keys(P),par={};ids.forEach(i=>par[i]=i);const F=[];
+ const S=(m,hl)=>F.push({msg:m,graph:{w:330,h:210,nodes:gnodes(P,id=>hl&&hl.includes(id)?'hl':par[id]===id?'ok':'in'),edges:ids.filter(i=>par[i]!==i).map(i=>({a:i,b:par[i],d:true,c:hl&&hl.includes(i)?'hl':'ok'}))},rows:[R('parent 표',ids.map(i=>par[i]),(k)=>par[ids[k]]===ids[k]?'ok':'in',k=>ids[k])]});
+ const find=x=>par[x]===x?x:(par[x]=find(par[x]));
+ S('처음엔 모두 자기 자신이 부모(루트, 검정). 화살표 = "내 부모는 저기".',null);
+ for(const[a,b]of[['A','B'],['C','D'],['E','F']]){par[b]=a;S(`union(${a}, ${b}) → ${b}의 부모 = ${a}`,[a,b])}
+ S('union(B, D): 먼저 각자의 루트를 찾음 → find(B)=A, find(D)=C',['A','C']);par['C']='A';S('루트끼리 연결: C의 부모 = A → {A,B,C,D}가 한 집합',['C','A']);
+ S('find(D): D → C → A 따라 올라감',['D','C','A']);find('D');S('경로 압축! D가 루트 A를 바로 가리키게 → 다음엔 한 번에 찾음',['D','A']);
+ S(`같은 집합? find(B)=A, find(D)=A → 예 ✓ / find(A)=A, find(E)=E → 아니오 ✗`,['B','D']);return F}},
+
+{id:'mst',g:'그래프',n:'크루스칼 MST',en:'Kruskal Minimum Spanning Tree',one:'간선을 가중치 작은 순으로 보며, 사이클이 안 생기면 채택(유니온 파인드로 판정).',
+when:'모든 도시를 최소 비용으로 연결(도로·전선·네트워크), "최소 신장 트리".',cx:'O(E log E) (간선 정렬)',
+tip:'채택 간선 수 = V − 1이 되면 끝. 사이클 판정 = 두 끝점의 루트가 이미 같은가?',
+code:`def kruskal(n, edges):              # edges: (w, a, b)
+    parent = list(range(n))
+    def find(x):
+        while parent[x] != x:
+            parent[x] = parent[parent[x]]; x = parent[x]
+        return x
+    total = 0
+    for w, a, b in sorted(edges):      # 가벼운 간선부터
+        ra, rb = find(a), find(b)
+        if ra != rb:                   # 사이클 안 생기면 채택
+            parent[rb] = ra; total += w
+    return total`,
+gen(){const P={A:[45,40],B:[285,40],C:[45,175],E:[165,108],D:[285,175]},E=[['A','B',6],['A','C',1],['A','E',2],['E','B',5],['C','E',3],['E','D',4]].sort((x,y)=>x[2]-y[2]);
+ const par={};Object.keys(P).forEach(k=>par[k]=k);const find=x=>par[x]===x?x:(par[x]=find(par[x]));const st=E.map(()=>'');let tot=0;const F=[];
+ const S=(m,cur)=>F.push({msg:m,graph:{w:330,h:210,nodes:gnodes(P,id=>cur>=0&&(E[cur][0]===id||E[cur][1]===id)?'hl':st.some((s,i)=>s==='ok'&&(E[i][0]===id||E[i][1]===id))?'ok':''),edges:E.map(([a,b,w],i)=>({a,b,w,c:i===cur?'hl':st[i]==='ok'?'ok':st[i]==='bad'?'bad':''}))},rows:[R('간선 (가중치 순)',E.map(e=>`${e[0]}${e[1]}·${e[2]}`),k=>k===cur?'hl':st[k]),R('비용 합',[tot],()=>'in')]});
+ S('간선을 가중치 오름차순으로 정렬. 가벼운 것부터 봅니다.',-1);
+ for(let i=0;i<E.length;i++){const[a,b,w]=E[i];const ra=find(a),rb=find(b);if(ra!==rb){par[rb]=ra;st[i]='ok';tot+=w;S(`${a}-${b} (${w}): 서로 다른 집합 → 채택! 합 ${tot}`,i)}else{st[i]='bad';S(`${a}-${b} (${w}): 이미 연결돼 있음 → 넣으면 사이클, 제외`,i)}
+  if(st.filter(s=>s==='ok').length===4){for(let j=i+1;j<E.length;j++)st[j]='bad';S(`간선 ${4}개 = V−1 → 종료. 최소 비용 ${tot}`,-1);break}}
+ return F}}
+];
+const NG=T.length;
+
+/* ---------- renderers ---------- */
+const tagRow=cells=>cells.some(c=>c.t);
+const rowH=r=>{const n=Math.max(r.cells.length,7);const ht=tagRow(r.cells);return`<div class="row"><div class="rl">${r.l}</div>${r.cells.length?`<div class="cells" style="--n:${n}">${r.cells.map(c=>`<div class="cw"><div class="cell ${String(c.v).length>2?'wd ':''}${c.c||''}">${c.v}</div>${ht?`<div class="tg">${c.t||''}</div>`:''}</div>`).join('')}</div>`:'<div class="empty">비어 있음</div>'}</div>`};
+const gridH=g=>`<div class="grid" style="--n:${g.cols}">${g.cells.map(c=>`<div class="cell ${c.c}">${c.v}</div>`).join('')}</div>`;
+const barsH=b=>{const pc=x=>x/b.max*100;const iv=it=>`<div class="iv ${it.c||''}" style="left:${pc(it.a)}%;width:${pc(it.b-it.a)}%">${it.a}–${it.b}</div>`;
+ const ticks=[];for(let t=0;t<=b.max;t+=3)ticks.push(`<span style="left:${pc(t)}%">${t}</span>`);
+ return`<div class="bars">${b.lanes.map(l=>`<div><div class="rl" style="font-size:13px;font-weight:700;color:var(--mute)">${l.l}</div>${l.stack?l.items.map(it=>`<div class="track">${iv(it)}</div>`).join(''):`<div class="track">${l.items.map(iv).join('')}</div>`}</div>`).join('')}<div class="axis">${ticks.join('')}</div></div>`};
+const graphH=g=>{const N={};g.nodes.forEach(n=>N[n.id]=n);const r=17;
+ const es=g.edges.map(e=>{const a=N[e.a],b=N[e.b];if(!a||!b)return'';const dx=b.x-a.x,dy=b.y-a.y,len=Math.hypot(dx,dy),ux=dx/len,uy=dy/len;
+  const x1=a.x+ux*r,y1=a.y+uy*r,x2=b.x-ux*(r+(e.d?3:0)),y2=b.y-uy*(r+(e.d?3:0));
+  const ar=e.d?`<polygon points="${x2},${y2} ${x2-ux*11-uy*6},${y2-uy*11+ux*6} ${x2-ux*11+uy*6},${y2-uy*11-ux*6}"/>`:'';
+  const mx=(a.x+b.x)/2,my=(a.y+b.y)/2;const wl=e.w!=null?`<rect class="wb" x="${mx-11}" y="${my-10}" width="22" height="20" rx="4"/><text class="wl" x="${mx}" y="${my+5}" text-anchor="middle">${e.w}</text>`:'';
+  return`<g class="${e.c?'e-'+e.c:''}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}"/>${ar}${wl}</g>`}).join('');
+ const ns=g.nodes.map(n=>`<g class="${n.c?'n-'+n.c:''}"><circle cx="${n.x}" cy="${n.y}" r="${r}"/><text class="nt" x="${n.x}" y="${n.y+5}" text-anchor="middle">${n.lab??n.id}</text>${n.s?`<text class="sl" x="${n.x}" y="${n.y+33}" text-anchor="middle">${n.s}</text>`:''}</g>`).join('');
+ return`<svg class="g" viewBox="0 0 ${g.w||330} ${g.h||210}" role="img" aria-label="그래프">${es}${ns}</svg>`};
+
+if(typeof document==='undefined'){globalThis.__T=T;globalThis.__H={rowH,gridH,barsH,graphH}}else{
+/* ---------- app ---------- */
+const $=id=>document.getElementById(id);
+let done=new Set();try{done=new Set(JSON.parse(localStorage.getItem('algo25')||'[]'))}catch(e){}
+const save=()=>{try{localStorage.setItem('algo25',JSON.stringify([...done]))}catch(e){}};
+let cur=0,vi=0,F=[],fi=0,timer=null;
+const pad=i=>String(i+1).padStart(2,'0');
+const chips=()=>{let g='',h='';T.forEach((t,i)=>{if(t.g!==g){g=t.g;h+=`<span class="grp">${g}</span>`}h+=`<button class="chip${i===cur?' on':''}${done.has(t.id)?' dn':''}" data-i="${i}">${pad(i)} ${t.n}</button>`});$('chips').innerHTML=h;
+ const on=$('chips').querySelector('.on');if(on)on.scrollIntoView({block:'nearest',inline:'center'});
+ $('pc').textContent=`${done.size} / ${NG}`;$('pb').style.width=done.size/NG*100+'%'};
+const stop=()=>{clearInterval(timer);timer=null;$('play').textContent='재생'};
+const draw=()=>{const f=F[fi];$('stage').innerHTML=(f.graph?graphH(f.graph):'')+(f.grid?gridH(f.grid):'')+(f.bars?barsH(f.bars):'')+(f.rows||[]).map(rowH).join('');
+ $('msg').textContent=f.msg;$('cnt').textContent=`${fi+1} / ${F.length}`;$('rng').max=F.length-1;$('rng').value=fi};
+const load=(i,v=0,push=true)=>{stop();cur=i;vi=v;const t=T[i];F=t.gen(v);fi=0;
+ $('num').textContent=pad(i);$('ttl').innerHTML=`${t.n}<small>${t.en}</small>`;$('one').textContent=t.one;$('when').textContent=t.when;$('cx').textContent=t.cx;$('tip').textContent=t.tip;$('code').textContent=t.code;
+ $('vars').innerHTML=t.vars?t.vars.map((x,k)=>`<button class="${k===v?'on':''}" data-v="${k}">${x}</button>`).join(''):'';
+ const g=$('got');g.classList.toggle('dn',done.has(t.id));g.textContent=done.has(t.id)?'✓ 이해함 · 다음으로':'이해했어요 → 다음';
+ chips();draw();if(push&&location.hash!=='#'+t.id)history.replaceState(null,'','#'+t.id)};
+const go=d=>{fi=Math.max(0,Math.min(F.length-1,fi+d));draw()};
+$('prev').onclick=()=>{stop();go(-1)};$('next').onclick=()=>{stop();go(1)};
+$('play').onclick=()=>{if(timer){stop();return}if(fi>=F.length-1)fi=0,draw();$('play').textContent='정지';timer=setInterval(()=>{if(fi>=F.length-1){stop();return}go(1)},1100)};
+$('rng').oninput=e=>{stop();fi=+e.target.value;draw()};
+$('chips').onclick=e=>{const b=e.target.closest('.chip');if(b){load(+b.dataset.i);window.scrollTo({top:0,behavior:'smooth'})}};
+$('vars').onclick=e=>{const b=e.target.closest('button');if(b)load(cur,+b.dataset.v)};
+const nextT=()=>{if(cur<NG-1){load(cur+1);window.scrollTo({top:0,behavior:'smooth'})}};
+$('got').onclick=()=>{done.add(T[cur].id);save();if(cur<NG-1)nextT();else load(cur,vi)};
+$('nx').onclick=nextT;
+$('copy').onclick=async()=>{try{await navigator.clipboard.writeText(T[cur].code);$('copy').textContent='복사됨'}catch(e){$('copy').textContent='직접 선택해 복사하세요'}setTimeout(()=>$('copy').textContent='복사',1500)};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;if(e.key==='ArrowRight'){stop();go(1)}if(e.key==='ArrowLeft'){stop();go(-1)}});
+const fromHash=()=>{const i=T.findIndex(t=>'#'+t.id===location.hash);return i<0?0:i};
+window.addEventListener('hashchange',()=>{const i=fromHash();if(i!==cur)load(i,0,false)});
+load(fromHash(),0,false);
+}
+}
+</script>
+</body>
+</html>
