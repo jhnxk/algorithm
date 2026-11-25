@@ -50,6 +50,7 @@ h2 small{font:500 15px Archivo,sans-serif;color:var(--mute);margin-left:8px}
 .cell{width:min(46px,calc((100cqw - 4px * (var(--n) - 1)) / var(--n)));aspect-ratio:1;display:grid;place-items:center;border:1.5px solid var(--line);background:var(--card);border-radius:5px;font:800 clamp(12px,3.6cqw,17px) Archivo,"Noto Sans KR",sans-serif;transition:background .2s,color .2s}
 .cell.wd{width:auto;aspect-ratio:auto;min-width:min(46px,calc((100cqw - 4px * (var(--n) - 1)) / var(--n)));height:min(46px,calc((100cqw - 4px * (var(--n) - 1)) / var(--n)));padding:0 8px;white-space:nowrap}
 .tg{height:15px;font:800 11px Archivo,sans-serif;color:var(--red);white-space:nowrap}
+.row.il{display:flex;align-items:center;gap:10px}.row.il .rl{flex:none;width:3.4em;margin:0}.row.il .cells{flex:1}.row.il .empty{padding:0}
 .empty{font-size:13px;color:var(--mute);padding:8px 0}
 .hl{background:var(--red)!important;color:#fff!important;border-color:var(--red)!important}
 .ok{background:var(--ink);color:var(--bg);border-color:var(--ink)}
@@ -112,9 +113,9 @@ footer{color:var(--mute);font-size:13px;border-top:2px solid var(--ink)}
 </head>
 <body>
 <header class="band"><div class="wrap top">
-  <div><h1>알고리즘 <b>25</b> 패턴,<br>움직임으로 이해하기</h1>
-  <p class="sub">정렬 · 배열 · 자료구조 · 전략 · 그래프 — 한 단계씩 넘겨보고, 이해했으면 체크하고 다음으로.</p></div>
-  <div class="prog"><div class="lab"><span>이해함</span><span id="pc">0 / 25</span></div><div class="bar"><i id="pb"></i></div></div>
+  <div><h1>알고리즘 <b>28</b> 패턴,<br>움직임으로 이해하기</h1>
+  <p class="sub">기초 자료구조 · 정렬 · 배열 · 자료구조 · 전략 · 그래프 — 한 단계씩 넘겨보고, 이해했으면 체크하고 다음으로.</p></div>
+  <div class="prog"><div class="lab"><span>이해함</span><span id="pc">0 / 28</span></div><div class="bar"><i id="pb"></i></div></div>
 </div></header>
 <nav><div class="chips" id="chips"></div></nav>
 <main class="band"><div class="wrap">
@@ -152,7 +153,126 @@ const adj7={};for(const k in G7)adj7[k]=[];for(const[a,b]of G7E){adj7[a].push(b)
 const gnodes=(pos,cls,sub)=>Object.keys(pos).map(id=>({id,x:pos[id][0],y:pos[id][1],c:cls(id)||'',s:sub?sub(id):''}));
 
 /* ---------- topics ---------- */
+const LLG=(ns,es)=>({w:330,h:185,nodes:ns.map(n=>({id:n.id,x:n.x,y:n.y,lab:String(n.lab),c:n.c||'',s:n.s||''})),edges:es.map(([a,b,c])=>({a,b,d:true,c:c||''}))});
+const line=(ids,labs,y=60)=>ids.map((id,i)=>({id,lab:labs[i],x:40+i*85,y}));
 const T=[
+/* ===== 기초 자료구조 ===== */
+{id:'linked',g:'기초 자료구조',n:'연결 리스트',en:'Linked List',one:'각 노드가 값과 "다음 노드 주소(next)"를 가진다. 삽입·삭제는 화살표만 바꿔 끼우면 끝.',
+when:'앞 노드를 알고 있는 상태에서 삽입·삭제가 잦을 때, LRU 캐시, "리스트 뒤집기"·"중간 노드 찾기" 같은 포인터 문제.',cx:'삽입·삭제 O(1) (앞 노드를 알 때) · k번째 접근·탐색 O(n)',
+tip:'삽입은 ① 새 노드가 다음을 먼저 잡고 ② 앞 노드가 새 노드를 가리키게 — 순서가 바뀌면 뒤쪽을 잃어버린다. 뒤집기는 prev·cur·nxt 세 포인터.',vars:['삽입','삭제','탐색'],
+code:`class Node:
+    def __init__(self, val, nxt=None):
+        self.val, self.next = val, nxt
+
+# 삽입: prev(3) 뒤에 5 넣기
+node = Node(5)
+node.next = prev.next      # ① 새 노드가 7을 먼저 붙잡음
+prev.next = node           # ② 3이 새 노드를 가리킴
+
+# 삭제: prev 다음 노드(7) 빼기
+prev.next = prev.next.next # 7을 건너뛰게
+
+# 탐색: 처음부터 하나씩
+cur = head
+while cur and cur.val != target:
+    cur = cur.next
+
+# 뒤집기
+prev, cur = None, head
+while cur:
+    nxt = cur.next; cur.next = prev
+    prev, cur = cur, nxt`,
+gen(v){const F=[],P=(m,ns,es)=>F.push({msg:m,graph:LLG(ns,es)});
+ if(v===0){const base=line(['a','b','c'],[3,7,9]);base[0].s='head';
+  P('3 → 7 → 9. 3 뒤에 5를 넣어 봅시다. 화살표 = next 포인터.',base,[['a','b'],['b','c']]);
+  const nw={id:'n',lab:5,x:125,y:145,c:'hl',s:''};
+  P('새 노드 5 생성. 아직 아무 데도 연결 안 됨.',[...base,nw],[['a','b'],['b','c']]);
+  P('① new.next = 7 — 새 노드가 먼저 7을 붙잡음.',[...base,{...nw,c:'in'}],[['a','b'],['b','c'],['n','b','hl']]);
+  P('② 3.next = new — 3이 이제 5를 가리킴. 다른 노드는 한 칸도 안 움직임 → O(1).',[{...base[0],c:'hl'},base[1],base[2],{...nw,c:'in'}],[['a','n','hl'],['b','c'],['n','b','ok']]);
+  const fin=line(['a','n','b','c'],[3,5,7,9]);fin[0].s='head';fin.forEach(n=>n.c='ok');
+  P('결과 3 → 5 → 7 → 9. ②를 먼저 하면 7 이후로 가는 길을 잃어버려요!',fin,[['a','n','ok'],['n','b','ok'],['b','c','ok']])}
+ else if(v===1){const b=line(['a','b','c','d'],[3,7,9,12]);b[0].s='head';
+  P('3 → 7 → 9 → 12에서 7을 지워 봅시다.',b,[['a','b'],['b','c'],['c','d']]);
+  P('삭제하려면 "앞 노드(prev)"가 필요 → 3이 prev.',[{...b[0],c:'hl',s:'prev'},{...b[1],c:'in',s:'삭제 대상'},b[2],b[3]],[['a','b'],['b','c'],['c','d']]);
+  P('prev.next = prev.next.next — 3이 7을 건너뛰고 9를 가리킴.',[{...b[0],c:'hl',s:'prev'},{...b[1],y:145,c:'dim'},b[2],b[3]],[['a','c','hl'],['b','c','dim'],['c','d']]);
+  const fin=line(['a','c','d'],[3,9,12]);fin[0].s='head';fin.forEach(n=>n.c='ok');
+  P('결과 3 → 9 → 12. 아무도 안 가리키는 7은 자동으로 정리됨. 화살표 하나만 바꿔서 O(1).',fin,[['a','c','ok'],['c','d','ok']])}
+ else{const ids=['a','b','c','d'],vals=[3,7,9,12],es=[['a','b'],['b','c'],['c','d']];
+  P('12를 찾아 봅시다. 연결 리스트는 head부터 next를 따라가는 수밖에 없어요.',line(ids,vals).map((n,i)=>({...n,s:i?'':'head'})),es);
+  for(let i=0;i<4;i++){const ns=line(ids,vals).map((n,j)=>({...n,c:j===i?'hl':j<i?'ok':'',s:j===i?'cur':''}));
+   P(vals[i]===12?`cur.val = 12 → 찾음! ${i+1}번 이동했어요.`:`cur.val = ${vals[i]} ≠ 12 → cur = cur.next`,ns,es.map(([x,y],j)=>[x,y,j<i?'ok':j===i&&vals[i]!==12?'hl':'']))}
+  P('k번째 노드에 가려면 처음부터 k번 이동 → 탐색·접근은 O(n).',line(ids,vals).map(n=>({...n,c:'ok'})),es.map(e=>[...e,'ok']))}
+ return F}},
+
+{id:'stackq',g:'기초 자료구조',n:'스택과 큐',en:'Stack · Queue',one:'스택은 나중에 넣은 게 먼저 나오고(LIFO), 큐는 먼저 넣은 게 먼저 나온다(FIFO).',
+when:'스택: 괄호 검사, 되돌리기(Undo), DFS, 후위 표기식 계산. 큐: BFS, 들어온 순서대로 처리(프린터, 요세푸스).',cx:'push · pop · append · popleft 모두 O(1)',
+tip:'파이썬 스택 = list(append/pop), 큐 = collections.deque(append/popleft). list.pop(0)은 O(n)이라 큐로 쓰면 시간 초과!',vars:['스택 (LIFO)','큐 (FIFO)','활용: 괄호 검사'],
+code:`# 스택: list
+stack = []
+stack.append(1)        # push
+top = stack[-1]        # 꼭대기 확인 (peek)
+stack.pop()            # pop — 마지막에 넣은 것
+
+# 큐: deque
+from collections import deque
+q = deque()
+q.append(1)            # enqueue — 뒤에 넣기
+q.popleft()            # dequeue — 앞에서 꺼내기, O(1)
+
+# 괄호 검사
+def valid(s):
+    pair, st = {')': '(', ']': '['}, []
+    for ch in s:
+        if ch in '([': st.append(ch)
+        elif not st or st.pop() != pair[ch]: return False
+    return not st`,
+gen(v){const F=[];
+ if(v<2){const S=v===0,ds=[],out=[];const ops=[['in',1],['in',2],['in',3],['out'],['in',4],['out'],['out']];
+  const fr=(m,last)=>F.push({msg:m,rows:[R(S?'스택 (바닥 → 꼭대기)':'큐 (앞 → 뒤)',ds,k=>last==='in'&&k===ds.length-1?'hl':(S?k===ds.length-1:k===0)?'in':'',k=>S?(k===ds.length-1?'top':''):[k===0?'front':'',k===ds.length-1?'rear':''].filter(Boolean).join(' ')),R('꺼낸 순서',out,k=>last==='out'&&k===out.length-1?'hl':'ok')]});
+  fr(S?'빈 스택. 위쪽(오른쪽 끝)으로만 넣고 뺍니다.':'빈 큐. 뒤(rear)로 넣고 앞(front)에서 뺍니다.');
+  for(const[o,x]of ops){if(o==='in'){ds.push(x);fr(S?`push(${x}) → 꼭대기에 쌓음`:`enqueue(${x}) → 맨 뒤에 줄 섬`,'in')}else{const y=S?ds.pop():ds.shift();out.push(y);fr(S?`pop() → 꼭대기 값 ${y} 꺼냄`:`dequeue() → 맨 앞 값 ${y} 꺼냄`,'out')}}
+  F.push({msg:S?'넣은 순서 1,2,3,4 → 꺼낸 순서 3,4,2. 나중에 들어온 게 먼저 나감 (LIFO).':'넣은 순서 1,2,3,4 → 꺼낸 순서 1,2,3. 먼저 들어온 게 먼저 나감 (FIFO).',rows:[R('꺼낸 순서',out,()=>'ok'),R(S?'남은 스택':'남은 큐',ds,()=>'in')]})}
+ else{const s=[...'([]())'],st=[],pr={')':'(',']':'['};
+  const fr=(m,i,c)=>F.push({msg:m,rows:[R('문자열',s,k=>k===i?(c||'hl'):k<i?'ok':''),R('스택',st,k=>k===st.length-1?'in':'',k=>k===st.length-1?'top':'')]});
+  fr('여는 괄호는 push, 닫는 괄호는 꼭대기와 짝이 맞는지 확인 후 pop.',-1);
+  s.forEach((ch,i)=>{if('(['.includes(ch)){st.push(ch);fr(`'${ch}' 여는 괄호 → push`,i)}else{const t=st.pop();fr(`'${ch}' 닫는 괄호 → 꼭대기 '${t}'와 짝 맞음 → pop`,i)}});
+  fr('끝까지 왔는데 스택이 비었음 → 올바른 괄호 ✓ (중간에 짝이 안 맞거나 스택이 남으면 ✗)',s.length)}
+ return F}},
+
+{id:'hasht',g:'기초 자료구조',n:'해시 테이블',en:'Hash Table',one:'해시 함수로 키를 칸 번호로 바꿔 바로 그 칸에 저장·조회. 다른 키가 같은 칸에 오면 "충돌".',
+when:'"있는지 빠르게 확인", 빈도 세기, 중복 제거, 두 수의 합, 이름 → 정보 매핑. 파이썬 dict · set의 내부 구조.',cx:'삽입·조회·삭제 평균 O(1) · 충돌이 한 칸에 몰리면 최악 O(n)',
+tip:'충돌 해결 두 가지: 체이닝(칸마다 리스트) vs 개방 주소법(빈 칸을 찾아 이동). dict 키는 해시 가능한(불변) 값만 — list ✗, tuple ✓.',vars:['체이닝','개방 주소법 (선형 탐사)'],
+code:`# 파이썬 dict / set이 해시 테이블
+d = {}
+d['apple'] = 3          # 평균 O(1)
+'apple' in d            # 평균 O(1)  (list에서 in은 O(n))
+
+# 원리 — 체이닝 (h(k) = k % 7)
+table = [[] for _ in range(7)]
+def put(k): table[k % 7].append(k)     # 해당 칸 리스트에 추가
+def get(k): return k in table[k % 7]   # 그 칸만 확인
+
+# 원리 — 개방 주소법 (선형 탐사)
+slots = [None] * 7
+def put2(k):
+    i = k % 7
+    while slots[i] is not None:        # 차 있으면 다음 칸
+        i = (i + 1) % 7
+    slots[i] = k`,
+gen(v){const keys=[10,22,31,4,15,28],m=7,F=[];const kr=i=>R('넣을 키',keys,k=>k===i?'hl':k<i?'ok':'');
+ if(v===0){const tb=Array.from({length:m},()=>[]);const bk=(hb,hv)=>tb.map((b,i)=>({l:`칸 ${i}`,il:true,cells:b.map(x=>({v:x,c:i===hb&&x===hv?'hl':i===hb?'in':'ok'}))}));
+  F.push({msg:'칸 7개, 해시 함수 h(k) = k % 7. 각 칸은 리스트(체인)를 가집니다.',rows:[kr(-1),...bk()]});
+  keys.forEach((k,i)=>{const h=k%m,col=tb[h].length>0;tb[h].push(k);F.push({msg:`h(${k}) = ${k} % 7 = ${h}${col?` → 칸 ${h}에 이미 ${tb[h][0]} 있음 → 충돌! 체인 뒤에 붙임`:` → 칸 ${h}에 저장`}`,rows:[kr(i),...bk(h,k)]})});
+  F.push({msg:'조회: 15 있나? h(15) = 1 → 칸 1만 보면 됨 (다른 칸은 안 봄).',rows:bk(1,-1)});
+  F.push({msg:'칸 1 체인: 22 ≠ 15 → 다음, 15 = 15 → 찾음! 체인이 짧으면 O(1)에 가까움.',rows:bk(1,15)})}
+ else{const sl=Array(m).fill('');const row=(c)=>R('슬롯',sl,(k,x)=>c&&c[k]?c[k]:x!==''?'ok':'',k=>String(k));
+  F.push({msg:'칸 7개, h(k) = k % 7. 칸에 하나씩만 저장, 차 있으면 다음 칸으로 이동(선형 탐사).',rows:[kr(-1),row()]});
+  keys.forEach((k,i)=>{let h=k%m;const tried=[];while(sl[h]!==''){tried.push(h);h=(h+1)%m}
+   const c={};tried.forEach(t=>c[t]='bad');c[h]='hl';sl[h]=k;F.push({msg:tried.length?`h(${k}) = ${k%m} → 칸 ${tried.join(', ')} 사용 중(충돌) → 다음 칸 ${h}에 저장`:`h(${k}) = ${h} → 비어 있음, 칸 ${h}에 저장`,rows:[kr(i),row(c)]})});
+  F.push({msg:'조회: 4 있나? h(4) = 4 → 칸 4는 31 ≠ 4 → 다음 칸',rows:[row({4:'hl'})]});
+  F.push({msg:'칸 5 = 4 → 찾음! 빈 칸을 만날 때까지 없으면 "없음". 한쪽에 몰리면(군집) 느려짐.',rows:[row({4:'bad',5:'hl'})]})}
+ return F}},
+
 /* ===== 정렬 ===== */
 {id:'quick',g:'정렬',n:'퀵 정렬',en:'Quick Sort',one:'피벗 하나를 골라 작은 값은 왼쪽, 큰 값은 오른쪽으로 나눈 뒤 양쪽을 다시 정렬.',
 when:'직접 정렬 구현, k번째 수 찾기(퀵 셀렉트), "분할 정복" 키워드.',cx:'평균 O(n log n) · 최악 O(n²) (이미 정렬된 배열 + 끝 피벗) · 추가 메모리 O(log n)',
@@ -347,7 +467,7 @@ gen(){const iv=[[1,3],[2,6],[8,10],[9,12],[15,18]],F=[],out=[];const mx=19;
  S(`완료: ${out.map(x=>`[${x}]`).join(' ')}`,iv.length);return F}},
 
 /* ===== 자료구조 ===== */
-{id:'hash',g:'자료구조',n:'빈도수 계산 (해시)',en:'Hash Map Counting',one:'딕셔너리에 "값 → 등장 횟수"를 기록. 찾기·갱신이 평균 O(1).',
+{id:'hash',g:'자료구조 활용',n:'빈도수 계산 (해시)',en:'Hash Map Counting',one:'딕셔너리에 "값 → 등장 횟수"를 기록. 찾기·갱신이 평균 O(1).',
 when:'등장 횟수, 중복 확인, 아나그램, "두 수의 합"(본 적 있는 값 저장), 그룹 묶기.',cx:'O(n) · 조회/갱신 평균 O(1)',
 tip:'collections.Counter, defaultdict(int) 를 쓰면 코드가 짧아진다. "본 적 있나?" = set/dict.',
 code:`from collections import Counter
@@ -363,7 +483,7 @@ gen(){const s=[...'banana'],d={},F=[];const dr=hl=>R('딕셔너리',Object.keys(
  s.forEach((ch,i)=>{const nw=!(ch in d);d[ch]=(d[ch]||0)+1;F.push({msg:nw?`'${ch}' 처음 봄 → ${ch}:1 추가`:`'${ch}' 이미 있음 → ${ch}:${d[ch]} (O(1)로 바로 찾아 갱신)`,rows:[R('문자열',s,k=>k===i?'hl':k<i?'ok':''),dr(ch)]})});
  F.push({msg:'완료! 가장 많이 나온 글자는 a (3번).',rows:[dr('a')]});return F}},
 
-{id:'mono',g:'자료구조',n:'모노톤 스택',en:'Monotonic Stack',one:'스택을 항상 내림차순(또는 오름차순)으로 유지. 규칙을 깨는 값이 오면 pop하며 답을 확정.',
+{id:'mono',g:'자료구조 활용',n:'모노톤 스택',en:'Monotonic Stack',one:'스택을 항상 내림차순(또는 오름차순)으로 유지. 규칙을 깨는 값이 오면 pop하며 답을 확정.',
 when:'"오른쪽에서 처음 나오는 더 큰 수"(오큰수), 주식 가격, 온도가 오르기까지 며칠, 히스토그램 최대 직사각형.',cx:'O(n) — 각 원소가 한 번 push, 한 번 pop',
 tip:'스택에는 값이 아니라 인덱스를 넣는 게 보통. pop되는 순간 = 그 원소의 답이 정해지는 순간.',
 code:`def next_greater(a):
@@ -379,7 +499,7 @@ gen(){const a=[2,1,2,4,3],ans=a.map(()=>'?'),st=[],F=[];
  a.forEach((x,i)=>{while(st.length&&a[st[st.length-1]]<x){const j=st.pop();ans[j]=x;S(`${x} 등장: 스택 꼭대기 ${a[j]} < ${x} → #${j}의 답은 ${x}! pop`,i,j)}st.push(i);S(`${x} push → 스택은 위로 갈수록 작거나 같게 유지`,i)});
  st.forEach(j=>ans[j]=-1);S('끝까지 남은 원소는 더 큰 수가 없음 → -1',a.length);return F}},
 
-{id:'heap',g:'자료구조',n:'Top-K (최소 힙)',en:'Heap / Priority Queue',one:'크기 K인 최소 힙을 유지하면서, 넘치면 가장 작은 값을 버린다. 남은 K개가 상위 K개.',
+{id:'heap',g:'자료구조 활용',n:'Top-K (최소 힙)',en:'Heap / Priority Queue',one:'크기 K인 최소 힙을 유지하면서, 넘치면 가장 작은 값을 버린다. 남은 K개가 상위 K개.',
 when:'상위/하위 K개, K번째로 큰 수, 계속 들어오는 값 중 최솟값 꺼내기, 다익스트라·스케줄링.',cx:'push/pop O(log K) · 전체 O(n log K)',
 tip:'파이썬 heapq는 최소 힙. 최대 힙이 필요하면 값에 −를 붙여 넣는다. h[0]이 항상 최솟값.',
 code:`import heapq
@@ -400,7 +520,7 @@ gen(){const a=[3,1,5,2,7,6,4],K=3,h=[],F=[];const P=[[165,30],[95,100],[235,100]
  a.forEach((x,i)=>{h.push(x);up(h.length-1);if(h.length>K){S(`${x} push → 크기 4 > K. 루트(최솟값) ${h[0]}을 버릴 차례`,i,true);const m=h[0];const last=h.pop();if(h.length){h[0]=last;dn(0)}S(`${m} pop → 상위 3개 후보만 남음`,i)}else S(`${x} push → 힙 정리(작은 값이 위로)`,i)});
  S(`끝! 힙 = 상위 3개 {${[...h].sort((p,q)=>p-q)}}, 루트 ${h[0]} = 3번째로 큰 수`,a.length,true);return F}},
 
-{id:'snail',g:'자료구조',n:'2차원 배열 순회',en:'2D Grid · Spiral',one:'방향 배열(dr, dc)로 이동하다가, 벽이나 이미 채운 칸을 만나면 방향을 바꾼다.',
+{id:'snail',g:'자료구조 활용',n:'2차원 배열 순회',en:'2D Grid · Spiral',one:'방향 배열(dr, dc)로 이동하다가, 벽이나 이미 채운 칸을 만나면 방향을 바꾼다.',
 when:'달팽이 배열, 격자 시뮬레이션(로봇 이동), 배열 회전, 상하좌우 이웃 탐색.',cx:'O(n·m) — 모든 칸 한 번씩',
 tip:'dr=[0,1,0,-1], dc=[1,0,-1,0] (→↓←↑) 패턴 암기. 범위 체크 0 ≤ r < n 을 먼저!',
 code:`def snail(n):
@@ -679,7 +799,7 @@ const NG=T.length;
 
 /* ---------- renderers ---------- */
 const tagRow=cells=>cells.some(c=>c.t);
-const rowH=r=>{const n=Math.max(r.cells.length,7);const ht=tagRow(r.cells);return`<div class="row"><div class="rl">${r.l}</div>${r.cells.length?`<div class="cells" style="--n:${n}">${r.cells.map(c=>`<div class="cw"><div class="cell ${String(c.v).length>2?'wd ':''}${c.c||''}">${c.v}</div>${ht?`<div class="tg">${c.t||''}</div>`:''}</div>`).join('')}</div>`:'<div class="empty">비어 있음</div>'}</div>`};
+const rowH=r=>{const n=Math.max(r.cells.length,7);const ht=tagRow(r.cells);return`<div class="row${r.il?' il':''}"><div class="rl">${r.l}</div>${r.cells.length?`<div class="cells" style="--n:${n}">${r.cells.map(c=>`<div class="cw"><div class="cell ${String(c.v).length>2?'wd ':''}${c.c||''}">${c.v}</div>${ht?`<div class="tg">${c.t||''}</div>`:''}</div>`).join('')}</div>`:`<div class="empty">${r.il?'—':'비어 있음'}</div>`}</div>`};
 const gridH=g=>`<div class="grid" style="--n:${g.cols}">${g.cells.map(c=>`<div class="cell ${c.c}">${c.v}</div>`).join('')}</div>`;
 const barsH=b=>{const pc=x=>x/b.max*100;const iv=it=>`<div class="iv ${it.c||''}" style="left:${pc(it.a)}%;width:${pc(it.b-it.a)}%">${it.a}–${it.b}</div>`;
  const ticks=[];for(let t=0;t<=b.max;t+=3)ticks.push(`<span style="left:${pc(t)}%">${t}</span>`);
